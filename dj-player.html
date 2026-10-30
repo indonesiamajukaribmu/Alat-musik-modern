@@ -1,0 +1,2824 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJ MIXER PLAYER PRO — Virtual Turntable Console</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: radial-gradient(circle at top, #1a1a2e 0%, #0a0a18 60%, #000 100%);
+    color: #f1f1f1;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    min-height: 100vh;
+    user-select: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  /* ===== APP WRAPPER (auto-fit to viewport, no truncation) ===== */
+  #app-wrap {
+    width: 1400px;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px;
+    box-sizing: border-box;
+    transform-origin: top center;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 10px 18px;
+    background: linear-gradient(90deg, rgba(233,69,96,0.15), rgba(245,166,35,0.15), rgba(76,217,99,0.15));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+  }
+  .brand {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    background: linear-gradient(90deg, #e94560, #f5a623, #4cd963, #5ac8fa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(245,166,35,0.3);
+  }
+  .brand small { font-size: 11px; letter-spacing: 1px; color: #888; display: block; -webkit-text-fill-color: #888; }
+  .clock {
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    color: #4cd963;
+    text-shadow: 0 0 8px rgba(76,217,99,0.6);
+  }
+
+  /* ===== RECORD BUTTON ===== */
+  .rec-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(145deg, #2a2a3e, #15151f);
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+    text-shadow: 0 0 6px rgba(231,76,60,0.5);
+  }
+  .rec-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(231,76,60,0.4);
+  }
+  .rec-btn.recording {
+    background: linear-gradient(145deg, #e74c3c, #b03352);
+    border-color: #ff6b6b;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(231,76,60,0.8);
+  }
+  .rec-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e74c3c;
+    box-shadow: 0 0 8px rgba(231,76,60,0.8);
+  }
+  .rec-btn.recording .rec-dot {
+    background: #fff;
+    box-shadow: 0 0 10px #fff;
+    animation: recBlink 0.8s ease-in-out infinite;
+  }
+  @keyframes recBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.7); }
+  }
+  .rec-text { font-family: 'Impact', sans-serif; }
+  .bpm-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Courier New', monospace;
+    color: #f5a623;
+  }
+  .beat-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #333; transition: background 0.1s;
+  }
+  .beat-dot.on { background: #e94560; box-shadow: 0 0 12px #e94560; }
+
+  /* ===== CONSOLE ===== */
+  .console {
+    width: 100%;
+    max-width: 1400px;
+    display: grid;
+    grid-template-columns: 1fr 0.8fr 1fr;
+    gap: 14px;
+  }
+
+  /* ===== DECK ===== */
+  .deck {
+    background: linear-gradient(145deg, #2a2a3e 0%, #15151f 100%);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #2c2c40;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+  }
+  .deck-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2c2c40;
+  }
+  .deck-title .ch {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .deck-a .ch { background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid #e94560; }
+  .deck-b .ch { background: rgba(90,200,250,0.2); color: #5ac8fa; border: 1px solid #5ac8fa; }
+  .deck-title .pioneer {
+    font-size: 10px;
+    color: #777;
+    letter-spacing: 3px;
+    font-weight: 600;
+  }
+
+  /* ===== VINYL / CD ROOM ===== */
+  .vinyl-wrap {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Tonearm (lengan pickup) */
+  .tonearm {
+    position: absolute;
+    top: -8px;
+    right: 6px;
+    width: 90px;
+    height: 8px;
+    transform-origin: right center;
+    transform: rotate(-38deg);
+    z-index: 5;
+    transition: transform 0.6s ease;
+  }
+  .tonearm.active { transform: rotate(-12deg); }
+  .tonearm::before {
+    content: '';
+    position: absolute;
+    right: 0; top: -4px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ddd 0%, #777 80%);
+    box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  }
+  .tonearm::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 1px;
+    width: 78px; height: 6px;
+    background: linear-gradient(90deg, #888, #ccc, #888);
+    border-radius: 3px;
+  }
+  /* Pickup head */
+  .tonearm .head {
+    position: absolute;
+    left: -6px; top: -6px;
+    width: 14px; height: 18px;
+    background: #1a1a1a;
+    border-radius: 3px;
+    box-shadow: 0 0 4px rgba(0,0,0,0.8);
+  }
+
+  /* Platter base */
+  .platter-base {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #333 0%, #1a1a1a 70%, #000 100%);
+    box-shadow: 0 0 0 6px #0a0a0a, 0 0 0 8px #2c2c40, 0 18px 30px rgba(0,0,0,0.8);
+  }
+  /* Vinyl disc */
+  .vinyl {
+    position: relative;
+    width: 230px;
+    height: 230px;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(circle at center,
+        #1a1a1a 0px, #1a1a1a 1px,
+        #0a0a0a 1px, #0a0a0a 3px),
+      radial-gradient(circle, #1f1f1f 0%, #050505 100%);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.9), 0 0 25px rgba(0,0,0,0.5);
+    transition: animation-duration 0.3s;
+    z-index: 2;
+  }
+  .vinyl.spinning { animation: spin 2.5s linear infinite; }
+  .vinyl.scratch { animation: spin 0.6s linear infinite; }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  /* Reflective shine */
+  .vinyl::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0%, rgba(255,255,255,0.08) 12%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 62%, transparent 75%);
+    pointer-events: none;
+  }
+
+  /* Center label with attractive image */
+  .vinyl-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85px; height: 85px;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 3;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.6), 0 0 20px rgba(233,69,96,0.4);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .vinyl-label::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: 0 0 0 2px #555;
+  }
+  .label-text {
+    position: absolute;
+    bottom: 6px;
+    font-size: 8px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 0 4px #000;
+    z-index: 4;
+    letter-spacing: 1px;
+    text-align: center;
+    width: 80%;
+    word-break: break-word;
+  }
+
+  /* ===== TRACK INFO ===== */
+  .track-info {
+    background: #0a0a14;
+    border: 1px solid #2c2c40;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    min-height: 50px;
+  }
+  .track-name {
+    color: #4cd963;
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Courier New', monospace;
+  }
+  .track-time {
+    color: #888;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Progress bar */
+  .progress {
+    width: 100%;
+    height: 6px;
+    background: #1a1a24;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    cursor: pointer;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e94560, #f5a623);
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(245,166,35,0.6);
+  }
+
+  /* ===== UPLOAD & VIDEO ===== */
+  .upload-zone {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .btn-upload {
+    flex: 1;
+    background: linear-gradient(145deg, #3a3a4e, #1f1f2e);
+    border: 1px solid #4a4a5e;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .btn-upload:hover {
+    background: linear-gradient(145deg, #4a4a5e, #2f2f3e);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245,166,35,0.2);
+  }
+  .btn-upload svg { vertical-align: middle; margin-right: 4px; }
+  .deck-a .btn-upload:hover { border-color: #e94560; }
+  .deck-b .btn-upload:hover { border-color: #5ac8fa; }
+
+  /* Video preview area */
+  .video-area {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    border: 1px solid #2c2c40;
+    position: relative;
+    display: none;
+  }
+  .video-area.active { display: block; }
+  .video-area video, .video-area audio {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .video-area .placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  /* ===== CONTROL BUTTONS ===== */
+  .ctrl-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .ctrl-btn {
+    background: linear-gradient(145deg, #2a2a3e, #15151f);
+    border: 1px solid #3a3a4e;
+    color: #ccc;
+    padding: 10px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.1s;
+    text-align: center;
+  }
+  .ctrl-btn:hover { color: #fff; border-color: #555; }
+  .ctrl-btn:active { transform: scale(0.95); }
+  .ctrl-btn.play {
+    background: linear-gradient(145deg, #4cd963, #2da347);
+    color: #fff;
+    border-color: #4cd963;
+    box-shadow: 0 0 12px rgba(76,217,99,0.4);
+  }
+  .ctrl-btn.play.playing {
+    background: linear-gradient(145deg, #e94560, #b03352);
+    border-color: #e94560;
+    box-shadow: 0 0 12px rgba(233,69,96,0.5);
+  }
+  .ctrl-btn.fx {
+    background: linear-gradient(145deg, #f5a623, #c47d18);
+    color: #fff;
+    border-color: #f5a623;
+    box-shadow: 0 0 10px rgba(245,166,35,0.3);
+  }
+  .ctrl-btn.fx.active {
+    box-shadow: 0 0 20px rgba(245,166,35,0.8);
+    animation: pulse 0.8s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(245,166,35,0.5); }
+    50% { box-shadow: 0 0 24px rgba(245,166,35,1); }
+  }
+
+  /* ===== EQ KNOBS ===== */
+  .eq-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .knob-wrap {
+    text-align: center;
+  }
+  .knob {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #4a4a5e 0%, #2a2a3e 60%, #15151f 100%);
+    margin: 0 auto 4px;
+    position: relative;
+    cursor: ns-resize;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
+    border: 1px solid #3a3a4e;
+  }
+  .knob::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 14px;
+    background: #f5a623;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(245,166,35,0.7);
+  }
+  .knob-label {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  /* ===== NUMBER PAD ===== */
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #2c2c40;
+  }
+  .num-btn {
+    background: linear-gradient(145deg, #1a3a5e, #0d2336);
+    border: 1px solid #2a5a8e;
+    color: #5ac8fa;
+    padding: 12px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 800;
+    text-align: center;
+    transition: all 0.1s;
+    text-shadow: 0 0 8px rgba(90,200,250,0.5);
+  }
+  .num-btn:hover { background: linear-gradient(145deg, #2a5a8e, #1a3a5e); }
+  .num-btn:active { transform: scale(0.93); }
+  .num-btn.active { background: #5ac8fa; color: #fff; }
+
+  /* ===== CENTER MIXER ===== */
+  .mixer {
+    background: linear-gradient(180deg, #2a2a3e 0%, #15151f 100%);
+    border-radius: 16px;
+    padding: 18px 14px;
+    border: 1px solid #2c2c40;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .mixer-brand {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #f5a623;
+    font-weight: 800;
+    text-shadow: 0 0 8px rgba(245,166,35,0.5);
+    padding-bottom: 8px;
+    border-bottom: 1px solid #2c2c40;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Level meters */
+  .meter-section {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  .meter-block {
+    text-align: center;
+  }
+  .meter-label {
+    font-size: 9px;
+    color: #888;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .meter {
+    width: 18px;
+    height: 120px;
+    background: #0a0a14;
+    border: 1px solid #2c2c40;
+    border-radius: 4px;
+    padding: 3px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+  }
+  .meter-led {
+    flex: 1;
+    background: #1a1a24;
+    border-radius: 1px;
+    transition: background 0.05s;
+  }
+  .meter-led.green { background: #4cd963; box-shadow: 0 0 4px rgba(76,217,99,0.6); }
+  .meter-led.yellow { background: #f5a623; box-shadow: 0 0 4px rgba(245,166,35,0.6); }
+  .meter-led.red { background: #e94560; box-shadow: 0 0 4px rgba(233,69,96,0.6); }
+
+  /* Channel faders */
+  .faders {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .fader-block { text-align: center; }
+  .fader-label {
+    font-size: 9px;
+    color: #888;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .fader {
+    width: 36px;
+    height: 130px;
+    background: linear-gradient(180deg, #0a0a14, #15151f);
+    border: 1px solid #2c2c40;
+    border-radius: 6px;
+    position: relative;
+    margin: 0 auto;
+  }
+  .fader-track {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    background: #1a1a24;
+    border-radius: 2px;
+  }
+  .fader-handle {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    width: 28px;
+    height: 18px;
+    background: linear-gradient(180deg, #5a5a6e, #2a2a3e);
+    border-radius: 3px;
+    cursor: ns-resize;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    border: 1px solid #4a4a5e;
+  }
+  .fader-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    background: #f5a623;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(245,166,35,0.6);
+  }
+
+  /* Crossfader */
+  .crossfader-section {
+    width: 100%;
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid #2c2c40;
+  }
+  .crossfader-label {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+  .crossfader {
+    width: 100%;
+    height: 30px;
+    background: linear-gradient(180deg, #0a0a14, #15151f);
+    border: 1px solid #2c2c40;
+    border-radius: 15px;
+    position: relative;
+    cursor: pointer;
+  }
+  .crossfader-track {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    right: 12px;
+    height: 4px;
+    background: #1a1a24;
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+  .crossfader-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 36px;
+    height: 24px;
+    background: linear-gradient(180deg, #5a5a6e, #2a2a3e);
+    border-radius: 4px;
+    cursor: ew-resize;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    border: 1px solid #4a4a5e;
+  }
+  .crossfader-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    right: 6px;
+    height: 2px;
+    background: #e94560;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(233,69,96,0.6);
+  }
+  .xfade-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  /* Master knob */
+  .master-section {
+    width: 100%;
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid #2c2c40;
+  }
+  .master-knob {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #5a5a6e 0%, #2a2a3e 60%, #15151f 100%);
+    margin: 6px auto;
+    position: relative;
+    cursor: ns-resize;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
+    border: 1px solid #4a4a5e;
+  }
+  .master-knob::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 16px;
+    background: #4cd963;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(76,217,99,0.7);
+  }
+  .master-label {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 1px;
+  }
+
+  /* ===== MIC SECTION (di mixer Pioneer DJM-9000) ===== */
+  .mic-section {
+    width: 100%;
+    text-align: center;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px solid #2c2c40;
+  }
+  .mic-label {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .mic-toggle {
+    width: 100%;
+    padding: 10px 8px;
+    background: linear-gradient(145deg, #3a2030, #1f1015);
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+    margin-bottom: 8px;
+    text-shadow: 0 0 6px rgba(231,76,60,0.5);
+  }
+  .mic-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231,76,60,0.4);
+  }
+  .mic-toggle.active {
+    background: linear-gradient(145deg, #4cd963, #2da347);
+    border-color: #4cd963;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.6);
+    box-shadow: 0 0 16px rgba(76,217,99,0.6);
+    animation: micPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(76,217,99,0.5); }
+    50% { box-shadow: 0 0 24px rgba(76,217,99,0.9); }
+  }
+  .mic-mode-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+  .mic-mode-btn {
+    background: linear-gradient(160deg, #2a2a3e, #15151f);
+    border: 1.5px solid #3a3a4e;
+    color: #888;
+    padding: 6px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .mic-mode-btn:hover {
+    border-color: var(--mode-color);
+    color: var(--mode-color);
+  }
+  .mic-mode-btn[data-mode="pantulan"] { --mode-color: #5ac8fa; }
+  .mic-mode-btn[data-mode="non-pantulan"] { --mode-color: #f5a623; }
+  .mic-mode-btn.active {
+    background: linear-gradient(160deg, var(--mode-bg), #15151f);
+    border-color: var(--mode-color);
+    color: var(--mode-color);
+    box-shadow: 0 0 10px var(--mode-color);
+  }
+  .mic-mode-btn[data-mode="pantulan"].active { --mode-bg: rgba(90,200,250,0.22); }
+  .mic-mode-btn[data-mode="non-pantulan"].active { --mode-bg: rgba(245,166,35,0.22); }
+  .mic-gain-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mic-gain-knob {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #5a5a6e 0%, #2a2a3e 60%, #15151f 100%);
+    position: relative;
+    cursor: ns-resize;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
+    border: 1px solid #4a4a5e;
+  }
+  .mic-gain-knob::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 11px;
+    background: #e94560;
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(233,69,96,0.7);
+  }
+  .mic-gain-label {
+    font-size: 8px;
+    color: #888;
+    letter-spacing: 1px;
+  }
+  .mic-status {
+    font-size: 8px;
+    color: #666;
+    margin-top: 4px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    min-height: 24px;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+  .mic-upload-btn {
+    display: block;
+    width: 100%;
+    padding: 7px 8px;
+    background: linear-gradient(145deg, #2a3a4e, #1a2030);
+    border: 1.5px solid #5ac8fa;
+    color: #5ac8fa;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 8px;
+    transition: all 0.15s;
+  }
+  .mic-upload-btn:hover {
+    background: linear-gradient(145deg, #3a4a5e, #2a3040);
+    box-shadow: 0 0 12px rgba(90,200,250,0.4);
+    transform: translateY(-1px);
+  }
+  .mic-upload-btn svg { vertical-align: middle; margin-right: 4px; }
+
+  /* Waveform mini */
+  .waveform-mini {
+    width: 100%;
+    height: 40px;
+    background: #0a0a14;
+    border-radius: 6px;
+    border: 1px solid #2c2c40;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .waveform-mini canvas { width: 100%; height: 100%; display: block; }
+
+  /* ===== SOUND EFFECT PANEL (Echo/Reverb Quality) ===== */
+  .sound-fx-panel {
+    width: 100%;
+    max-width: 1400px;
+    margin-top: 14px;
+    background: linear-gradient(145deg, #1f1f2e 0%, #0f0f18 100%);
+    border: 1px solid #2c2c40;
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .sfx-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2c2c40;
+  }
+  .sfx-title {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #f5a623;
+    text-shadow: 0 0 10px rgba(245,166,35,0.4);
+  }
+  .sfx-title small {
+    display: block;
+    font-size: 10px;
+    color: #777;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .sfx-status {
+    font-size: 11px;
+    color: #4cd963;
+    font-family: 'Courier New', monospace;
+    padding: 4px 10px;
+    background: rgba(76,217,99,0.1);
+    border: 1px solid rgba(76,217,99,0.3);
+    border-radius: 6px;
+  }
+  .sfx-pads {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .sfx-pad {
+    background: linear-gradient(160deg, #2a2a3e, #15151f);
+    border: 2px solid #3a3a4e;
+    border-radius: 12px;
+    padding: 14px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .sfx-pad::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--pad-color);
+    box-shadow: 0 0 10px var(--pad-color);
+  }
+  .sfx-pad:hover {
+    transform: translateY(-2px);
+    border-color: var(--pad-color);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 15px var(--pad-color);
+  }
+  .sfx-pad:active { transform: translateY(0) scale(0.97); }
+  .sfx-pad.active {
+    border-color: var(--pad-color);
+    box-shadow: 0 0 20px var(--pad-color), inset 0 0 20px rgba(255,255,255,0.05);
+    background: linear-gradient(160deg, var(--pad-bg), #15151f);
+  }
+  .sfx-pad.active::after {
+    content: 'ON';
+    position: absolute;
+    top: 4px; right: 6px;
+    font-size: 8px;
+    color: var(--pad-color);
+    font-weight: 800;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .pad-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--pad-color);
+    text-shadow: 0 0 12px var(--pad-color);
+    line-height: 1;
+    margin-bottom: 6px;
+    font-family: 'Impact', sans-serif;
+  }
+  .pad-quality {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .pad-desc {
+    font-size: 9px;
+    color: #888;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+  }
+  .pad-bounce-bar {
+    margin-top: 6px;
+    height: 4px;
+    background: #1a1a24;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .pad-bounce-fill {
+    height: 100%;
+    background: var(--pad-color);
+    width: var(--bounce-pct);
+    box-shadow: 0 0 6px var(--pad-color);
+  }
+
+  /* Quality color variants */
+  .sfx-pad[data-quality="tidak-baik"]   { --pad-color: #e74c3c; --pad-bg: rgba(231,76,60,0.2); }
+  .sfx-pad[data-quality="kurang"]       { --pad-color: #e67e22; --pad-bg: rgba(230,126,34,0.2); }
+  .sfx-pad[data-quality="cukup"]        { --pad-color: #f1c40f; --pad-bg: rgba(241,196,15,0.2); }
+  .sfx-pad[data-quality="cukup-baik"]   { --pad-color: #a8d84a; --pad-bg: rgba(168,216,74,0.2); }
+  .sfx-pad[data-quality="bagus"]        { --pad-color: #4cd963; --pad-bg: rgba(76,217,99,0.2); }
+  .sfx-pad[data-quality="sangat-bagus"] { --pad-color: #00ffaa; --pad-bg: rgba(0,255,170,0.2); }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 11px;
+    color: #555;
+    max-width: 1400px;
+    width: 100%;
+  }
+  .footer span { color: #888; }
+  .footer .hint {
+    margin-top: 4px;
+    font-size: 10px;
+    color: #444;
+  }
+
+  /* ===== DECK MODE TOGGLE (Pantulan vs Non-Pantulan, per-deck) ===== */
+  .deck-mode-toggle {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #2c2c40;
+  }
+  .deck-mode-label {
+    font-size: 9px;
+    color: #777;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-align: center;
+    font-weight: 700;
+  }
+  .deck-mode-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .deck-mode-btn {
+    background: linear-gradient(160deg, #2a2a3e, #15151f);
+    border: 2px solid #3a3a4e;
+    border-radius: 10px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .deck-mode-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--mode-color);
+    box-shadow: 0 0 8px var(--mode-color);
+  }
+  .deck-mode-btn[data-mode="pantulan"] { --mode-color: #5ac8fa; }
+  .deck-mode-btn[data-mode="non-pantulan"] { --mode-color: #f5a623; }
+  .deck-mode-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--mode-color);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5), 0 0 12px var(--mode-color);
+  }
+  .deck-mode-btn:active { transform: translateY(0) scale(0.96); }
+  .deck-mode-btn.active {
+    border-color: var(--mode-color);
+    background: linear-gradient(160deg, var(--mode-bg), #15151f);
+    box-shadow: 0 0 18px var(--mode-color), inset 0 0 18px rgba(255,255,255,0.05);
+  }
+  .deck-mode-btn[data-mode="pantulan"].active { --mode-bg: rgba(90,200,250,0.22); }
+  .deck-mode-btn[data-mode="non-pantulan"].active { --mode-bg: rgba(245,166,35,0.22); }
+  .deck-mode-btn.active::after {
+    content: 'ON';
+    position: absolute;
+    top: 3px; right: 6px;
+    font-size: 8px;
+    color: var(--mode-color);
+    font-weight: 800;
+    animation: blink 1s infinite;
+  }
+  .dm-icon {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--mode-color);
+    text-shadow: 0 0 10px var(--mode-color);
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+  .dm-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .dm-desc {
+    font-size: 8px;
+    color: #888;
+    line-height: 1.25;
+  }
+
+  /* ===== FOOTER end ===== 
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: rgba(20,20,30,0.95);
+    border: 1px solid #4cd963;
+    color: #4cd963;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 12px;
+    box-shadow: 0 0 20px rgba(76,217,99,0.4);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Responsive fallback for very small screens (mobile) */
+  @media (max-width: 560px) {
+    .console { grid-template-columns: 1fr; }
+    .vinyl-wrap { width: 200px; height: 200px; }
+    .vinyl { width: 180px; height: 180px; }
+    .sfx-pads { grid-template-columns: repeat(2, 1fr); }
+    #app-wrap { width: 100% !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== APP WRAPPER (auto-scale to fit viewport) ===== -->
+<div id="app-wrap">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">
+    DJ MIXER PLAYER PRO
+    <small>VIRTUAL TURNTABLE CONSOLE • ANDROID / PC / LAPTOP</small>
+  </div>
+  <div class="bpm-indicator">
+    <span>BPM</span>
+    <span id="bpmVal">128.0</span>
+    <span class="beat-dot" id="beatDot"></span>
+  </div>
+  <button class="rec-btn" id="recBtn" title="Rekam output mix ke file audio">
+    <span class="rec-dot"></span>
+    <span class="rec-text">REC</span>
+  </button>
+  <div class="clock" id="clock">00:00:00</div>
+</div>
+
+<!-- CONSOLE -->
+<div class="console">
+
+  <!-- ====== DECK A (KIRI) ====== -->
+  <div class="deck deck-a">
+    <div class="deck-title">
+      <span class="ch">DECK A</span>
+      <span class="pioneer">CDJ-9000</span>
+    </div>
+
+    <!-- VINYL TURNTABLE -->
+    <div class="vinyl-wrap">
+      <div class="platter-base"></div>
+      <div class="vinyl" id="vinylA">
+        <div class="vinyl-label" id="labelA" style="background: linear-gradient(135deg, #e94560, #f5a623);">
+          <span class="label-text" id="labelTextA">NO TRACK</span>
+        </div>
+      </div>
+      <div class="tonearm" id="tonearmA"><div class="head"></div></div>
+    </div>
+
+    <!-- WAVEFORM -->
+    <div class="waveform-mini"><canvas id="waveA"></canvas></div>
+
+    <!-- TRACK INFO -->
+    <div class="track-info">
+      <div class="track-name" id="nameA">— Belum ada lagu —</div>
+      <div class="track-time">
+        <span id="curA">00:00</span>
+        <span id="durA">00:00</span>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress" id="progA"><div class="progress-fill" id="fillA"></div></div>
+
+    <!-- VIDEO AREA -->
+    <div class="video-area" id="vidAreaA">
+      <video id="vidA" muted playsinline></video>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="upload-zone">
+      <label class="btn-upload" for="fileA">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L6 8h4v6h4V8h4L12 2zm-8 16v2h16v-2H4z"/></svg>
+        UPLOAD AUDIO
+      </label>
+      <label class="btn-upload" for="fileVA">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+        UPLOAD VIDEO
+      </label>
+      <input type="file" id="fileA" accept="audio/*" hidden>
+      <input type="file" id="fileVA" accept="video/*" hidden>
+    </div>
+
+    <!-- CONTROL BUTTONS -->
+    <div class="ctrl-row">
+      <button class="ctrl-btn play" data-deck="A" data-action="play">PLAY</button>
+      <button class="ctrl-btn" data-deck="A" data-action="cue">CUE</button>
+      <button class="ctrl-btn" data-deck="A" data-action="cup">CUP</button>
+      <button class="ctrl-btn" data-deck="A" data-action="in">IN</button>
+    </div>
+    <div class="ctrl-row">
+      <button class="ctrl-btn fx" data-deck="A" data-fx="1">FX1</button>
+      <button class="ctrl-btn fx" data-deck="A" data-fx="2">FX2</button>
+      <button class="ctrl-btn" data-deck="A" data-action="loop">LOOP</button>
+      <button class="ctrl-btn" data-deck="A" data-action="sync">SYNC</button>
+    </div>
+
+    <!-- EQ KNOBS -->
+    <div class="eq-row">
+      <div class="knob-wrap">
+        <div class="knob" data-deck="A" data-eq="high" data-val="50"></div>
+        <div class="knob-label">HIGH</div>
+      </div>
+      <div class="knob-wrap">
+        <div class="knob" data-deck="A" data-eq="mid" data-val="50"></div>
+        <div class="knob-label">MID</div>
+      </div>
+      <div class="knob-wrap">
+        <div class="knob" data-deck="A" data-eq="low" data-val="50"></div>
+        <div class="knob-label">LOW</div>
+      </div>
+    </div>
+
+    <!-- MODE TOGGLE: Pantulan / Non-Pantulan -->
+    <div class="deck-mode-toggle">
+      <div class="deck-mode-label">MODE SUARA</div>
+      <div class="deck-mode-row">
+        <div class="deck-mode-btn" data-deck="A" data-mode="pantulan">
+          <div class="dm-icon">((( )))</div>
+          <div class="dm-title">Pantulan</div>
+          <div class="dm-desc">Echo / reverb aktif</div>
+        </div>
+        <div class="deck-mode-btn active" data-deck="A" data-mode="non-pantulan">
+          <div class="dm-icon">&mdash;&mdash;</div>
+          <div class="dm-title">Non-Pantulan</div>
+          <div class="dm-desc">Dry, tanpa gema</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUMPAD -->
+    <div class="numpad">
+      <button class="num-btn" data-deck="A" data-pad="1">1</button>
+      <button class="num-btn" data-deck="A" data-pad="2">2</button>
+      <button class="num-btn" data-deck="A" data-pad="3">3</button>
+      <button class="num-btn" data-deck="A" data-pad="4">4</button>
+    </div>
+
+    <!-- hidden audio element -->
+    <audio id="audioA" crossorigin="anonymous"></audio>
+  </div>
+
+  <!-- ====== CENTER MIXER ====== -->
+  <div class="mixer">
+    <div class="mixer-brand">PIONEER • DJM-9000</div>
+
+    <!-- LEVEL METERS -->
+    <div class="meter-section">
+      <div class="meter-block">
+        <div class="meter-label">CH1</div>
+        <div class="meter" id="meter1"></div>
+      </div>
+      <div class="meter-block">
+        <div class="meter-label">MASTER</div>
+        <div class="meter" id="meterMaster"></div>
+      </div>
+      <div class="meter-block">
+        <div class="meter-label">CH2</div>
+        <div class="meter" id="meter2"></div>
+      </div>
+    </div>
+
+    <!-- CHANNEL FADERS -->
+    <div class="faders">
+      <div class="fader-block">
+        <div class="fader-label">CH1 <span style="color:#f5a623">0-200%</span></div>
+        <div class="fader" id="fader1">
+          <div class="fader-track"></div>
+          <div class="fader-handle" style="bottom: 50%;"></div>
+        </div>
+      </div>
+      <div class="fader-block">
+        <div class="fader-label">CH2 <span style="color:#f5a623">0-200%</span></div>
+        <div class="fader" id="fader2">
+          <div class="fader-track"></div>
+          <div class="fader-handle" style="bottom: 50%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MASTER VOLUME -->
+    <div class="master-section">
+      <div class="master-label">MASTER <span style="color:#f5a623">0-200%</span></div>
+      <div class="master-knob" id="masterKnob" data-val="100"></div>
+    </div>
+
+    <!-- ===== MIC SECTION (Pioneer DJM-9000) ===== -->
+    <div class="mic-section">
+      <div class="mic-label">MIC INPUT</div>
+      <button class="mic-toggle" id="micToggle">MIC OFF</button>
+      <label class="mic-upload-btn" for="micFileInput">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a3 3 0 00-3 3v6a3 3 0 006 0V5a3 3 0 00-3-3zm5 9v1a5 5 0 01-10 0v-1H5v1a7 7 0 006 6.92V22h2v-3.08A7 7 0 0019 12v-1h-2z"/></svg>
+        UPLOAD MIC AUDIO
+      </label>
+      <input type="file" id="micFileInput" accept="audio/*" hidden>
+      <div class="mic-mode-row">
+        <div class="mic-mode-btn" data-mode="pantulan" id="micPantulan">PANTULAN</div>
+        <div class="mic-mode-btn active" data-mode="non-pantulan" id="micDry">DRY</div>
+      </div>
+      <div class="mic-gain-wrap">
+        <div class="mic-gain-label">GAIN <span style="color:#f5a623">0-200%</span></div>
+        <div class="mic-gain-knob" id="micGainKnob" data-val="100"></div>
+      </div>
+      <div class="mic-status" id="micStatus">&mdash; mic idle &mdash;</div>
+    </div>
+
+    <!-- CROSSFADER -->
+    <div class="crossfader-section">
+      <div class="crossfader-label">CROSSFADER</div>
+      <div class="crossfader" id="crossfader">
+        <div class="crossfader-track"></div>
+        <div class="crossfader-handle" id="xfadeHandle"></div>
+      </div>
+      <div class="xfade-labels">
+        <span>A</span><span>MIX</span><span>B</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== DECK B (KANAN) ====== -->
+  <div class="deck deck-b">
+    <div class="deck-title">
+      <span class="pioneer">CDJ-9000</span>
+      <span class="ch">DECK B</span>
+    </div>
+
+    <!-- VINYL TURNTABLE -->
+    <div class="vinyl-wrap">
+      <div class="platter-base"></div>
+      <div class="vinyl" id="vinylB">
+        <div class="vinyl-label" id="labelB" style="background: linear-gradient(135deg, #5ac8fa, #5e5ce6);">
+          <span class="label-text" id="labelTextB">NO TRACK</span>
+        </div>
+      </div>
+      <div class="tonearm" id="tonearmB"><div class="head"></div></div>
+    </div>
+
+    <!-- WAVEFORM -->
+    <div class="waveform-mini"><canvas id="waveB"></canvas></div>
+
+    <!-- TRACK INFO -->
+    <div class="track-info">
+      <div class="track-name" id="nameB">— Belum ada lagu —</div>
+      <div class="track-time">
+        <span id="curB">00:00</span>
+        <span id="durB">00:00</span>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress" id="progB"><div class="progress-fill" id="fillB"></div></div>
+
+    <!-- VIDEO AREA -->
+    <div class="video-area" id="vidAreaB">
+      <video id="vidB" muted playsinline></video>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="upload-zone">
+      <label class="btn-upload" for="fileB">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L6 8h4v6h4V8h4L12 2zm-8 16v2h16v-2H4z"/></svg>
+        UPLOAD AUDIO
+      </label>
+      <label class="btn-upload" for="fileVB">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+        UPLOAD VIDEO
+      </label>
+      <input type="file" id="fileB" accept="audio/*" hidden>
+      <input type="file" id="fileVB" accept="video/*" hidden>
+    </div>
+
+    <!-- CONTROL BUTTONS -->
+    <div class="ctrl-row">
+      <button class="ctrl-btn play" data-deck="B" data-action="play">PLAY</button>
+      <button class="ctrl-btn" data-deck="B" data-action="cue">CUE</button>
+      <button class="ctrl-btn" data-deck="B" data-action="cup">CUP</button>
+      <button class="ctrl-btn" data-deck="B" data-action="in">IN</button>
+    </div>
+    <div class="ctrl-row">
+      <button class="ctrl-btn fx" data-deck="B" data-fx="1">FX1</button>
+      <button class="ctrl-btn fx" data-deck="B" data-fx="2">FX2</button>
+      <button class="ctrl-btn" data-deck="B" data-action="loop">LOOP</button>
+      <button class="ctrl-btn" data-deck="B" data-action="sync">SYNC</button>
+    </div>
+
+    <!-- EQ KNOBS -->
+    <div class="eq-row">
+      <div class="knob-wrap">
+        <div class="knob" data-deck="B" data-eq="high" data-val="50"></div>
+        <div class="knob-label">HIGH</div>
+      </div>
+      <div class="knob-wrap">
+        <div class="knob" data-deck="B" data-eq="mid" data-val="50"></div>
+        <div class="knob-label">MID</div>
+      </div>
+      <div class="knob-wrap">
+        <div class="knob" data-deck="B" data-eq="low" data-val="50"></div>
+        <div class="knob-label">LOW</div>
+      </div>
+    </div>
+
+    <!-- MODE TOGGLE: Pantulan / Non-Pantulan -->
+    <div class="deck-mode-toggle">
+      <div class="deck-mode-label">MODE SUARA</div>
+      <div class="deck-mode-row">
+        <div class="deck-mode-btn" data-deck="B" data-mode="pantulan">
+          <div class="dm-icon">((( )))</div>
+          <div class="dm-title">Pantulan</div>
+          <div class="dm-desc">Echo / reverb aktif</div>
+        </div>
+        <div class="deck-mode-btn active" data-deck="B" data-mode="non-pantulan">
+          <div class="dm-icon">&mdash;&mdash;</div>
+          <div class="dm-title">Non-Pantulan</div>
+          <div class="dm-desc">Dry, tanpa gema</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUMPAD -->
+    <div class="numpad">
+      <button class="num-btn" data-deck="B" data-pad="1">1</button>
+      <button class="num-btn" data-deck="B" data-pad="2">2</button>
+      <button class="num-btn" data-deck="B" data-pad="3">3</button>
+      <button class="num-btn" data-deck="B" data-pad="4">4</button>
+    </div>
+
+    <!-- hidden audio element -->
+    <audio id="audioB" crossorigin="anonymous"></audio>
+  </div>
+</div>
+
+<!-- ===== SOUND EFFECT / ECHO QUALITY PANEL ===== -->
+<div class="sound-fx-panel">
+  <div class="sfx-header">
+    <div class="sfx-title">
+      SOUND EFFECT — PANTULAN SUARA
+      <small>Echo / Reverb Quality • Pilih kualitas pantulan suara aktif</small>
+    </div>
+    <div class="sfx-status" id="sfxStatus">REVERB: OFF</div>
+  </div>
+
+  <div class="sfx-pads">
+    <!-- Pad 1 — TIDAK BAIK -->
+    <div class="sfx-pad" data-quality="tidak-baik" data-pad="1" data-wet="0.05" data-dur="0.2" data-decay="6" style="--bounce-pct: 10%;">
+      <div class="pad-num">1</div>
+      <div class="pad-quality">Tidak Baik</div>
+      <div class="pad-desc">Pantulan nyaris tak terdengar • Dry</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+
+    <!-- Pad 2 — KURANG -->
+    <div class="sfx-pad" data-quality="kurang" data-pad="2" data-wet="0.15" data-dur="0.6" data-decay="4" style="--bounce-pct: 25%;">
+      <div class="pad-num">2</div>
+      <div class="pad-quality">Kurang</div>
+      <div class="pad-desc">Echo kecil • Small room</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+
+    <!-- Pad 3 — CUKUP -->
+    <div class="sfx-pad" data-quality="cukup" data-pad="3" data-wet="0.30" data-dur="1.2" data-decay="3" style="--bounce-pct: 45%;">
+      <div class="pad-num">3</div>
+      <div class="pad-quality">Cukup</div>
+      <div class="pad-desc">Echo sedang • Live room</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+
+    <!-- Pad 4 — CUKUP BAIK -->
+    <div class="sfx-pad" data-quality="cukup-baik" data-pad="4" data-wet="0.45" data-dur="2.0" data-decay="2.5" style="--bounce-pct: 65%;">
+      <div class="pad-num">4</div>
+      <div class="pad-quality">Cukup Baik</div>
+      <div class="pad-desc">Echo jelas • Concert hall</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+
+    <!-- Pad 5 — BAGUS -->
+    <div class="sfx-pad" data-quality="bagus" data-pad="5" data-wet="0.60" data-dur="3.0" data-decay="2.2" style="--bounce-pct: 82%;">
+      <div class="pad-num">5</div>
+      <div class="pad-quality">Bagus</div>
+      <div class="pad-desc">Echo lebar • Large hall</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+
+    <!-- Pad 6 — SANGAT BAGUS -->
+    <div class="sfx-pad" data-quality="sangat-bagus" data-pad="6" data-wet="0.75" data-dur="5.0" data-decay="2" style="--bounce-pct: 100%;">
+      <div class="pad-num">6</div>
+      <div class="pad-quality">Sangat Bagus</div>
+      <div class="pad-desc">Pantulan maksimal • Cathedral</div>
+      <div class="pad-bounce-bar"><div class="pad-bounce-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Virtual DJ Console • Support Audio MP3/WAV/OGG/M4A & Video MP4/WebM/MOV</span>
+  <div class="hint">Tip: Upload lagu/video dari folder mana pun di Android / PC / Laptop. Vinyl berputar otomatis saat play. Tarik knob EQ dengan mouse untuk adjust High/Mid/Low. Pilih pad Sound Effect 1-6 untuk kualitas pantulan suara.</div>
+</div>
+
+</div><!-- /#app-wrap -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   DJ MIXER PLAYER PRO — Logic
+   ========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+const Decks = {
+  A: {
+    audio: $('audioA'),
+    video: $('vidA'),
+    videoArea: $('vidAreaA'),
+    vinyl: $('vinylA'),
+    label: $('labelA'),
+    labelText: $('labelTextA'),
+    tonearm: $('tonearmA'),
+    name: $('nameA'),
+    cur: $('curA'),
+    dur: $('durA'),
+    fill: $('fillA'),
+    prog: $('progA'),
+    wave: $('waveA'),
+    isVideo: false,
+    isPlaying: false,
+    cuePoint: 0,
+    fx: { 1: false, 2: false },
+    eq: { high: 0, mid: 0, low: 0 },
+    gain: 0.8,
+    filterNode: null,
+    color: 'linear-gradient(135deg, #e94560, #f5a623)'
+  },
+  B: {
+    audio: $('audioB'),
+    video: $('vidB'),
+    videoArea: $('vidAreaB'),
+    vinyl: $('vinylB'),
+    label: $('labelB'),
+    labelText: $('labelTextB'),
+    tonearm: $('tonearmB'),
+    name: $('nameB'),
+    cur: $('curB'),
+    dur: $('durB'),
+    fill: $('fillB'),
+    prog: $('progB'),
+    wave: $('waveB'),
+    isVideo: false,
+    isPlaying: false,
+    cuePoint: 0,
+    fx: { 1: false, 2: false },
+    eq: { high: 0, mid: 0, low: 0 },
+    gain: 0.8,
+    filterNode: null,
+    color: 'linear-gradient(135deg, #5ac8fa, #5e5ce6)'
+  }
+};
+
+/* ---------- WEB AUDIO API SETUP ---------- */
+let audioCtx = null;
+let masterGain = null;
+let analyser1 = null, analyser2 = null, analyserMaster = null;
+let sourceA = null, sourceB = null;
+let eqFiltersA = null, eqFiltersB = null;
+let dryGain = null, wetGain = null, reverbConvolver = null;
+let activeSfxPad = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.85;
+
+  analyserMaster = audioCtx.createAnalyser();
+  analyserMaster.fftSize = 64;
+
+  // Per-deck analyser & EQ
+  ['A','B'].forEach(deck => {
+    const d = Decks[deck];
+    const src = audioCtx.createMediaElementSource(d.audio);
+    d.sourceNode = src;
+
+    // EQ: 3-band
+    const high = audioCtx.createBiquadFilter();
+    high.type = 'highshelf'; high.frequency.value = 3000; high.gain.value = 0;
+    const mid = audioCtx.createBiquadFilter();
+    mid.type = 'peaking'; mid.frequency.value = 1000; mid.Q.value = 1; mid.gain.value = 0;
+    const low = audioCtx.createBiquadFilter();
+    low.type = 'lowshelf'; low.frequency.value = 200; low.gain.value = 0;
+
+    src.connect(low); low.connect(mid); mid.connect(high);
+
+    const deckGain = audioCtx.createGain();
+    deckGain.gain.value = 0.8;
+    d.deckGain = deckGain;
+
+    // Per-deck reverb chain for pantulan/non-pantulan mode toggle
+    const dDry = audioCtx.createGain();
+    const dWet = audioCtx.createGain();
+    const dConv = audioCtx.createConvolver();
+    dConv.normalize = true;
+    dConv.buffer = createImpulseResponse(2.8, 2.2);
+    high.connect(dDry); dDry.connect(deckGain);
+    high.connect(dConv); dConv.connect(dWet); dWet.connect(deckGain);
+    // Default: non-pantulan (dry only)
+    dDry.gain.value = 1.0;
+    dWet.gain.value = 0.0;
+    d.dryGain = dDry; d.wetGain = dWet; d.convolver = dConv;
+    d.mode = 'non-pantulan';
+
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;
+    deckGain.connect(analyser);
+    deckGain.connect(masterGain);
+
+    d.analyser = analyser;
+    d.eqNodes = { high, mid, low };
+  });
+
+  masterGain.connect(analyserMaster);
+
+  // ===== REVERB CHAIN (Sound Effect pads) =====
+  // Dry path (direct) + Wet path (through convolver)
+  dryGain = audioCtx.createGain();
+  dryGain.gain.value = 1.0;
+  wetGain = audioCtx.createGain();
+  wetGain.gain.value = 0.0; // off by default
+
+  reverbConvolver = audioCtx.createConvolver();
+  reverbConvolver.normalize = true;
+  // default empty impulse (will be replaced when pad clicked)
+  reverbConvolver.buffer = createImpulseResponse(0.1, 6);
+
+  masterGain.connect(dryGain);
+  masterGain.connect(reverbConvolver);
+  reverbConvolver.connect(wetGain);
+
+  dryGain.connect(audioCtx.destination);
+  wetGain.connect(audioCtx.destination);
+
+  // ===== Apply current knob/fader values (so changes made before init take effect) =====
+  updateMaster(); // apply master knob value to masterGain
+  // Apply EQ knob values
+  document.querySelectorAll('.knob').forEach(knob => {
+    const val = parseFloat(knob.dataset.val);
+    applyEQ(knob.dataset.deck, knob.dataset.eq, (val - 50) / 50 * 20);
+    // Also rotate visual indicator
+    const angle = (val / 100) * 135;
+    knob.style.transform = `rotate(${angle}deg)`;
+  });
+  // Apply channel fader values
+  ['A', 'B'].forEach((deck, idx) => {
+    const d = Decks[deck];
+    if (d && d.deckGain) {
+      const fader = idx === 0 ? $('fader1') : $('fader2');
+      const handle = fader.querySelector('.fader-handle');
+      const bottomPct = parseFloat((handle.style.bottom || '70').replace('%', '')) || 70;
+      d.deckGain.gain.value = (bottomPct / 100) * 2.0;
+    }
+  });
+  // Apply crossfader position
+  const xhandle = $('xfadeHandle');
+  if (xhandle) {
+    const leftPct = parseFloat((xhandle.style.left || '50').replace('%', '')) || 50;
+    const gainA = Math.cos((leftPct / 100) * Math.PI / 2);
+    const gainB = Math.cos((1 - leftPct / 100) * Math.PI / 2);
+    if (Decks.A.deckGain) Decks.A.deckGain.gain.value = gainA * 2.0;
+    if (Decks.B.deckGain) Decks.B.deckGain.gain.value = gainB * 2.0;
+  }
+}
+
+/* ---------- IMPULSE RESPONSE GENERATOR (untuk reverb) ---------- */
+function createImpulseResponse(duration, decay) {
+  const sampleRate = audioCtx.sampleRate;
+  const length = Math.max(1, Math.floor(sampleRate * duration));
+  const impulse = audioCtx.createBuffer(2, length, sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const data = impulse.getChannelData(ch);
+    for (let i = 0; i < length; i++) {
+      // noise with exponential decay + slight low-pass feel
+      const t = i / length;
+      const env = Math.pow(1 - t, decay);
+      data[i] = (Math.random() * 2 - 1) * env;
+    }
+  }
+  return impulse;
+}
+
+/* ---------- TOAST ---------- */
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ---------- FILE UPLOAD ---------- */
+function loadFile(deck, file, isVideo) {
+  const d = Decks[deck];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  if (isVideo) {
+    d.video.src = url;
+    d.video.load();
+    d.videoArea.classList.add('active');
+    d.isVideo = true;
+    // Use video as audio source too — play through deck pipeline
+    d.audio.src = url; // also load audio for sync (video muted, audio plays)
+    d.audio.load();
+  } else {
+    d.videoArea.classList.remove('active');
+    d.video.pause();
+    d.video.removeAttribute('src');
+    d.isVideo = false;
+    d.audio.src = url;
+    d.audio.load();
+  }
+
+  // Track name
+  const fname = file.name.replace(/\.[^.]+$/, '');
+  d.name.textContent = fname;
+  d.labelText.textContent = fname.substring(0, 18).toUpperCase();
+  d.cuePoint = 0;
+
+  // Generate attractive label art
+  setLabelArt(deck, fname);
+
+  toast(`DECK ${deck}: ${fname.substring(0,30)} loaded`);
+}
+
+function setLabelArt(deck, name) {
+  const d = Decks[deck];
+  // Generate a colorful gradient based on hash of name
+  let hash = 0;
+  for (let i=0; i<name.length; i++) hash = name.charCodeAt(i) + ((hash<<5)-hash);
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 60) % 360;
+  const h3 = (h1 + 120) % 360;
+  d.label.style.background = `conic-gradient(from ${hash%360}deg, hsl(${h1},80%,55%), hsl(${h2},80%,55%), hsl(${h3},80%,55%), hsl(${h1},80%,55%))`;
+}
+
+/* File input handlers */
+$('fileA').addEventListener('change', e => loadFile('A', e.target.files[0], false));
+$('fileB').addEventListener('change', e => loadFile('B', e.target.files[0], false));
+$('fileVA').addEventListener('change', e => loadFile('A', e.target.files[0], true));
+$('fileVB').addEventListener('change', e => loadFile('B', e.target.files[0], true));
+
+/* ---------- PLAY / CUE / CUP / IN ---------- */
+function togglePlay(deck) {
+  const d = Decks[deck];
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (!d.audio.src) { toast(`DECK ${deck}: Upload file dulu!`); return; }
+
+  if (d.audio.paused) {
+    const p = d.audio.play();
+    // Optimistically update UI now (audio.play() resolves async, but user sees instant feedback)
+    d.isPlaying = true;
+    d.vinyl.classList.add('spinning');
+    d.tonearm.classList.add('active');
+    updatePlayBtn(deck);
+    if (p) p.then(() => {
+      if (d.isVideo) d.video.play();
+    }).catch(err => {
+      // Play failed — revert UI
+      d.isPlaying = false;
+      d.vinyl.classList.remove('spinning');
+      d.tonearm.classList.remove('active');
+      updatePlayBtn(deck);
+      toast('Play error: ' + err.message);
+    });
+  } else {
+    d.audio.pause();
+    d.isPlaying = false;
+    d.vinyl.classList.remove('spinning');
+    d.tonearm.classList.remove('active');
+    if (d.isVideo) d.video.pause();
+    updatePlayBtn(deck);
+  }
+}
+
+function updatePlayBtn(deck) {
+  const btn = document.querySelector(`.ctrl-btn.play[data-deck="${deck}"]`);
+  if (Decks[deck].isPlaying) {
+    btn.classList.add('playing');
+    btn.textContent = 'PAUSE';
+  } else {
+    btn.classList.remove('playing');
+    btn.textContent = 'PLAY';
+  }
+}
+
+function doCue(deck) {
+  const d = Decks[deck];
+  if (!d.audio.src) return;
+  d.audio.pause();
+  d.audio.currentTime = d.cuePoint;
+  d.isPlaying = false;
+  d.vinyl.classList.remove('spinning');
+  d.tonearm.classList.remove('active');
+  if (d.isVideo) { d.video.pause(); d.video.currentTime = d.cuePoint; }
+  updatePlayBtn(deck);
+  toast(`DECK ${deck}: CUE set @ ${fmtTime(d.cuePoint)}`);
+}
+
+function doCup(deck) {
+  // CUP = play from cue point immediately
+  const d = Decks[deck];
+  if (!d.audio.src) return;
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  d.audio.currentTime = d.cuePoint;
+  if (d.isVideo) d.video.currentTime = d.cuePoint;
+  d.audio.play().then(() => {
+    d.isPlaying = true;
+    d.vinyl.classList.add('spinning');
+    d.tonearm.classList.add('active');
+    if (d.isVideo) d.video.play();
+    updatePlayBtn(deck);
+  });
+}
+
+function doIn(deck) {
+  // IN = set cue point at current position
+  const d = Decks[deck];
+  if (!d.audio.src) return;
+  d.cuePoint = d.audio.currentTime;
+  toast(`DECK ${deck}: IN — cue point @ ${fmtTime(d.cuePoint)}`);
+}
+
+/* ---------- BUTTON CLICKS ---------- */
+document.querySelectorAll('.ctrl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const deck = btn.dataset.deck;
+    const action = btn.dataset.action;
+    const fx = btn.dataset.fx;
+    if (action === 'play') togglePlay(deck);
+    else if (action === 'cue') doCue(deck);
+    else if (action === 'cup') doCup(deck);
+    else if (action === 'in') doIn(deck);
+    else if (action === 'loop') {
+      const d = Decks[deck];
+      if (d.audio.loop) { d.audio.loop = false; btn.style.background = ''; toast(`DECK ${deck}: LOOP OFF`); }
+      else { d.audio.loop = true; btn.style.background = 'linear-gradient(145deg, #5ac8fa, #2a6ea0)'; toast(`DECK ${deck}: LOOP ON`); }
+    }
+    else if (action === 'sync') {
+      toast(`DECK ${deck}: SYNC (placeholder)`);
+    }
+    else if (fx) {
+      const d = Decks[deck];
+      d.fx[fx] = !d.fx[fx];
+      btn.classList.toggle('active');
+      applyFX(deck, fx, d.fx[fx]);
+      toast(`DECK ${deck}: FX${fx} ${d.fx[fx]?'ON':'OFF'}`);
+    }
+  });
+});
+
+/* ---------- FX (Audio Filters) ---------- */
+function applyFX(deck, fxNum, on) {
+  const d = Decks[deck];
+  if (!d.eqNodes) return;
+  if (fxNum === '1') {
+    // FX1 = Echo/Reverb (use delay)
+    if (on) {
+      if (!d.delayNode) {
+        d.delayNode = audioCtx.createDelay();
+        d.delayNode.delayTime.value = 0.25;
+        d.feedbackNode = audioCtx.createGain();
+        d.feedbackNode.gain.value = 0.35;
+        d.delayNode.connect(d.feedbackNode);
+        d.feedbackNode.connect(d.delayNode);
+        d.eqNodes.high.connect(d.delayNode);
+        d.delayNode.connect(d.deckGain);
+      }
+    } else {
+      // Bypass by reconnecting
+      try { d.eqNodes.high.disconnect(d.delayNode); } catch(e){}
+    }
+  } else if (fxNum === '2') {
+    // FX2 = Filter sweep (lowpass modulated)
+    if (on) {
+      if (!d.filterNode) {
+        d.filterNode = audioCtx.createBiquadFilter();
+        d.filterNode.type = 'lowpass';
+        d.filterNode.frequency.value = 600;
+        d.filterNode.Q.value = 8;
+      }
+      try { d.eqNodes.high.disconnect(d.deckGain); } catch(e){}
+      d.eqNodes.high.connect(d.filterNode);
+      d.filterNode.connect(d.deckGain);
+    } else {
+      try { d.eqNodes.high.disconnect(d.filterNode); d.filterNode.disconnect(d.deckGain); } catch(e){}
+      d.eqNodes.high.connect(d.deckGain);
+    }
+  }
+}
+
+/* ---------- EQ KNOBS (drag to rotate) ---------- */
+document.querySelectorAll('.knob').forEach(knob => {
+  let startY = 0, startVal = 0;
+  let dragging = false;
+  const maxAngle = 135;
+
+  function update() {
+    const val = parseFloat(knob.dataset.val);
+    const angle = (val / 100) * maxAngle;
+    knob.style.transform = `rotate(${angle}deg)`;
+  }
+  update();
+
+  knob.addEventListener('mousedown', e => {
+    dragging = true;
+    startY = e.clientY;
+    startVal = parseFloat(knob.dataset.val);
+    e.preventDefault();
+  });
+  knob.addEventListener('touchstart', e => {
+    dragging = true;
+    startY = e.touches[0].clientY;
+    startVal = parseFloat(knob.dataset.val);
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const delta = startY - e.clientY;
+    let v = startVal + delta * 1.5;
+    v = Math.max(0, Math.min(100, v));
+    knob.dataset.val = v;
+    update();
+    applyEQ(knob.dataset.deck, knob.dataset.eq, (v-50)/50 * 20); // -20dB to +20dB
+  });
+  document.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const delta = startY - e.touches[0].clientY;
+    let v = startVal + delta * 1.5;
+    v = Math.max(0, Math.min(100, v));
+    knob.dataset.val = v;
+    update();
+    applyEQ(knob.dataset.deck, knob.dataset.eq, (v-50)/50 * 20);
+  });
+  document.addEventListener('mouseup', () => dragging = false);
+  document.addEventListener('touchend', () => dragging = false);
+});
+
+function applyEQ(deck, band, db) {
+  const d = Decks[deck];
+  if (!d.eqNodes) return;
+  d.eqNodes[band].gain.value = db;
+}
+
+/* ---------- MASTER KNOB ---------- */
+const masterKnob = $('masterKnob');
+let mkDragging = false, mkStartY = 0, mkStartVal = 0;
+function updateMaster() {
+  const val = parseFloat(masterKnob.dataset.val);
+  // Max 200% — rotation spans 0-135deg across 0-200 range
+  const angle = (val / 200) * 135;
+  masterKnob.style.transform = `rotate(${angle}deg)`;
+  // Gain: val=100 → 1.0x (normal), val=200 → 2.0x (200% boost)
+  if (masterGain) masterGain.gain.value = Math.max(0, val / 100);
+}
+updateMaster();
+masterKnob.addEventListener('mousedown', e => {
+  mkDragging = true; mkStartY = e.clientY; mkStartVal = parseFloat(masterKnob.dataset.val);
+});
+masterKnob.addEventListener('touchstart', e => {
+  mkDragging = true; mkStartY = e.touches[0].clientY; mkStartVal = parseFloat(masterKnob.dataset.val);
+});
+document.addEventListener('mousemove', e => {
+  if (!mkDragging) return;
+  let v = mkStartVal + (mkStartY - e.clientY) * 1.5;
+  v = Math.max(0, Math.min(200, v));
+  masterKnob.dataset.val = v;
+  updateMaster();
+});
+document.addEventListener('touchmove', e => {
+  if (!mkDragging) return;
+  let v = mkStartVal + (mkStartY - e.touches[0].clientY) * 1.5;
+  v = Math.max(0, Math.min(200, v));
+  masterKnob.dataset.val = v;
+  updateMaster();
+});
+document.addEventListener('mouseup', () => mkDragging = false);
+document.addEventListener('touchend', () => mkDragging = false);
+
+/* ---------- CHANNEL FADERS ---------- */
+function setupFader(elem, deck) {
+  const handle = elem.querySelector('.fader-handle');
+  let dragging = false;
+  function update(y) {
+    const rect = elem.getBoundingClientRect();
+    let pct = 1 - (y - rect.top) / rect.height;
+    pct = Math.max(0, Math.min(1, pct));
+    handle.style.bottom = (pct * 100) + '%';
+    const d = Decks[deck];
+    // Max 200% — at pct=1.0, gain=2.0 (200% boost); at pct=0.5, gain=1.0 (normal)
+    if (d.deckGain) d.deckGain.gain.value = pct * 2.0;
+  }
+  handle.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
+  handle.addEventListener('touchstart', e => { dragging = true; });
+  elem.addEventListener('click', e => { if (e.target === handle) return; update(e.clientY); });
+  document.addEventListener('mousemove', e => { if (dragging) update(e.clientY); });
+  document.addEventListener('touchmove', e => { if (dragging) update(e.touches[0].clientY); });
+  document.addEventListener('mouseup', () => dragging = false);
+  document.addEventListener('touchend', () => dragging = false);
+}
+setupFader($('fader1'), 'A');
+setupFader($('fader2'), 'B');
+
+/* ---------- CROSSFADER ---------- */
+const xfade = $('crossfader');
+const xhandle = $('xfadeHandle');
+let xfDragging = false;
+function updateXFade(x) {
+  const rect = xfade.getBoundingClientRect();
+  let pct = (x - rect.left) / rect.width;
+  pct = Math.max(0, Math.min(1, pct));
+  xhandle.style.left = (pct * 100) + '%';
+  // A fades out as B fades in — max 200% boost at extremes
+  const gainA = Math.cos(pct * Math.PI / 2);
+  const gainB = Math.cos((1-pct) * Math.PI / 2);
+  if (Decks.A.deckGain) Decks.A.deckGain.gain.value = gainA * 2.0;
+  if (Decks.B.deckGain) Decks.B.deckGain.gain.value = gainB * 2.0;
+}
+xhandle.addEventListener('mousedown', e => { xfDragging = true; e.preventDefault(); });
+xhandle.addEventListener('touchstart', e => { xfDragging = true; });
+xfade.addEventListener('click', e => { if (e.target === xhandle) return; updateXFade(e.clientX); });
+document.addEventListener('mousemove', e => { if (xfDragging) updateXFade(e.clientX); });
+document.addEventListener('touchmove', e => { if (xfDragging) updateXFade(e.touches[0].clientX); });
+document.addEventListener('mouseup', () => xfDragging = false);
+document.addEventListener('touchend', () => xfDragging = false);
+
+/* ---------- NUMPAD (hot cues) ---------- */
+const padCues = { A:{}, B:{} };
+document.querySelectorAll('.num-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const deck = btn.dataset.deck;
+    const pad = btn.dataset.pad;
+    const d = Decks[deck];
+    if (!d.audio.src) { toast(`DECK ${deck}: upload file dulu`); return; }
+    if (btn.classList.contains('active')) {
+      // Jump to stored
+      d.audio.currentTime = padCues[deck][pad];
+      if (d.isVideo) d.video.currentTime = padCues[deck][pad];
+      toast(`DECK ${deck}: HOT CUE ${pad} → ${fmtTime(padCues[deck][pad])}`);
+    } else {
+      // Store current
+      padCues[deck][pad] = d.audio.currentTime;
+      btn.classList.add('active');
+      toast(`DECK ${deck}: SET HOT CUE ${pad} @ ${fmtTime(d.audio.currentTime)}`);
+    }
+  });
+});
+
+/* ---------- PROGRESS BAR ---------- */
+$('progA').addEventListener('click', e => {
+  const d = Decks.A;
+  if (!d.audio.src) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  d.audio.currentTime = pct * d.audio.duration;
+  if (d.isVideo) d.video.currentTime = d.audio.currentTime;
+});
+$('progB').addEventListener('click', e => {
+  const d = Decks.B;
+  if (!d.audio.src) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  d.audio.currentTime = pct * d.audio.duration;
+  if (d.isVideo) d.video.currentTime = d.audio.currentTime;
+});
+
+/* ---------- TIME UPDATE ---------- */
+function fmtTime(s) {
+  if (!isFinite(s) || s<0) s = 0;
+  const m = Math.floor(s/60);
+  const sec = Math.floor(s%60);
+  return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+['A','B'].forEach(deck => {
+  const d = Decks[deck];
+  d.audio.addEventListener('timeupdate', () => {
+    const cur = d.audio.currentTime;
+    const dur = d.audio.duration || 0;
+    d.cur.textContent = fmtTime(cur);
+    d.dur.textContent = fmtTime(dur);
+    if (dur) d.fill.style.width = (cur/dur*100) + '%';
+  });
+  d.audio.addEventListener('ended', () => {
+    d.isPlaying = false;
+    d.vinyl.classList.remove('spinning');
+    d.tonearm.classList.remove('active');
+    updatePlayBtn(deck);
+  });
+  d.audio.addEventListener('loadedmetadata', () => {
+    d.dur.textContent = fmtTime(d.audio.duration);
+    drawWaveform(deck);
+  });
+});
+
+/* ---------- WAVEFORM (simulated) ---------- */
+function drawWaveform(deck) {
+  const canvas = Decks[deck].wave;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+  ctx.clearRect(0,0,W,H);
+  const grad = ctx.createLinearGradient(0,0,W,0);
+  if (deck === 'A') { grad.addColorStop(0, '#e94560'); grad.addColorStop(1, '#f5a623'); }
+  else { grad.addColorStop(0, '#5ac8fa'); grad.addColorStop(1, '#5e5ce6'); }
+  ctx.fillStyle = grad;
+  const bars = 60;
+  const bw = W/bars;
+  // Pseudo-random waveform based on duration
+  const dur = Decks[deck].audio.duration || 30;
+  for (let i=0; i<bars; i++) {
+    const h = (Math.sin(i*0.3 + dur) * 0.4 + Math.sin(i*0.7) * 0.3 + 0.6) * H * 0.5;
+    ctx.fillRect(i*bw+1, (H-h)/2, bw-2, h);
+  }
+}
+
+/* ---------- LEVEL METERS (LED) ---------- */
+function buildMeter(elem) {
+  elem.innerHTML = '';
+  for (let i=0; i<14; i++) {
+    const led = document.createElement('div');
+    led.className = 'meter-led';
+    elem.appendChild(led);
+  }
+}
+buildMeter($('meter1'));
+buildMeter($('meter2'));
+buildMeter($('meterMaster'));
+
+function updateMeters() {
+  if (!audioCtx) return;
+  ['A','B'].forEach((deck, idx) => {
+    const d = Decks[deck];
+    if (!d.analyser) return;
+    const arr = new Uint8Array(d.analyser.frequencyBinCount);
+    d.analyser.getByteFrequencyData(arr);
+    let sum = 0;
+    for (let i=0;i<arr.length;i++) sum += arr[i];
+    const avg = sum / arr.length / 255;
+    const meter = idx===0 ? $('meter1') : $('meter2');
+    const leds = meter.querySelectorAll('.meter-led');
+    const lit = Math.round(avg * leds.length * 1.4);
+    leds.forEach((led, i) => {
+      led.classList.remove('green','yellow','red');
+      if (i < lit) {
+        if (i < leds.length*0.6) led.classList.add('green');
+        else if (i < leds.length*0.85) led.classList.add('yellow');
+        else led.classList.add('red');
+      }
+    });
+  });
+  // Master
+  if (analyserMaster) {
+    const arr = new Uint8Array(analyserMaster.frequencyBinCount);
+    analyserMaster.getByteFrequencyData(arr);
+    let sum = 0;
+    for (let i=0;i<arr.length;i++) sum += arr[i];
+    const avg = sum / arr.length / 255;
+    const meter = $('meterMaster');
+    const leds = meter.querySelectorAll('.meter-led');
+    const lit = Math.round(avg * leds.length * 1.4);
+    leds.forEach((led, i) => {
+      led.classList.remove('green','yellow','red');
+      if (i < lit) {
+        if (i < leds.length*0.6) led.classList.add('green');
+        else if (i < leds.length*0.85) led.classList.add('yellow');
+        else led.classList.add('red');
+      }
+    });
+  }
+}
+
+/* ---------- BEAT INDICATOR (BPM sim) ---------- */
+let beatTimer = null;
+function startBeat() {
+  let beatCount = 0;
+  const dot = $('beatDot');
+  const bpmVal = $('bpmVal');
+  function tick() {
+    dot.classList.add('on');
+    setTimeout(() => dot.classList.remove('on'), 120);
+    beatCount++;
+  }
+  const bpm = 124 + Math.floor(Math.random()*8);
+  bpmVal.textContent = bpm.toFixed(1);
+  const interval = 60000 / bpm;
+  tick();
+  beatTimer = setInterval(tick, interval);
+}
+
+/* ---------- CLOCK ---------- */
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  $('clock').textContent = `${h}:${m}:${s}`;
+}
+
+/* ---------- SYNC VIDEO WITH AUDIO ---------- */
+['A','B'].forEach(deck => {
+  const d = Decks[deck];
+  d.audio.addEventListener('play', () => {
+    if (d.isVideo) {
+      d.video.currentTime = d.audio.currentTime;
+      d.video.play().catch(()=>{});
+    }
+  });
+  d.audio.addEventListener('pause', () => {
+    if (d.isVideo) d.video.pause();
+  });
+  d.audio.addEventListener('seeked', () => {
+    if (d.isVideo) d.video.currentTime = d.audio.currentTime;
+  });
+});
+
+/* ---------- VINYL CLICK (scratch) ---------- */
+['A','B'].forEach(deck => {
+  const d = Decks[deck];
+  let scratchActive = false;
+  d.vinyl.addEventListener('mousedown', () => {
+    if (!d.audio.src) return;
+    scratchActive = true;
+    d.vinyl.classList.add('scratch');
+    d.audio.pause();
+  });
+  document.addEventListener('mouseup', () => {
+    if (scratchActive) {
+      scratchActive = false;
+      d.vinyl.classList.remove('scratch');
+      if (d.isPlaying) d.audio.play();
+    }
+  });
+});
+
+/* ---------- SOUND EFFECT PADS (Echo/Reverb Quality) ---------- */
+const qualityLabels = {
+  'tidak-baik':   'TIDAK BAIK',
+  'kurang':       'KURANG',
+  'cukup':        'CUKUP',
+  'cukup-baik':   'CUKUP BAIK',
+  'bagus':        'BAGUS',
+  'sangat-bagus': 'SANGAT BAGUS'
+};
+
+function applySfxPad(padEl) {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const quality = padEl.dataset.quality;
+  const wet = parseFloat(padEl.dataset.wet);
+  const dur = parseFloat(padEl.dataset.dur);
+  const decay = parseFloat(padEl.dataset.decay);
+  const padNum = padEl.dataset.pad;
+
+  // Toggle off if same pad clicked again
+  if (activeSfxPad === padEl) {
+    padEl.classList.remove('active');
+    activeSfxPad = null;
+    wetGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+    $('sfxStatus').textContent = 'REVERB: OFF';
+    $('sfxStatus').style.color = '#4cd963';
+    $('sfxStatus').style.borderColor = 'rgba(76,217,99,0.3)';
+    $('sfxStatus').style.background = 'rgba(76,217,99,0.1)';
+    toast(`Sound Effect OFF — suara kembali dry`);
+    return;
+  }
+
+  // Deactivate previous pad
+  document.querySelectorAll('.sfx-pad.active').forEach(p => p.classList.remove('active'));
+
+  // Activate this pad
+  padEl.classList.add('active');
+  activeSfxPad = padEl;
+
+  // Generate new impulse response matching the quality
+  reverbConvolver.buffer = createImpulseResponse(dur, decay);
+
+  // Crossfade wet gain
+  wetGain.gain.setTargetAtTime(wet, audioCtx.currentTime, 0.08);
+  // Slightly reduce dry to avoid muddiness at high wet
+  const dryAmt = Math.max(0.55, 1 - wet * 0.4);
+  dryGain.gain.setTargetAtTime(dryAmt, audioCtx.currentTime, 0.08);
+
+  const label = qualityLabels[quality] || quality.toUpperCase();
+  $('sfxStatus').textContent = `REVERB: ${label} (wet ${Math.round(wet*100)}%)`;
+  const c = getComputedStyle(padEl).getPropertyValue('--pad-color').trim();
+  $('sfxStatus').style.color = c;
+  $('sfxStatus').style.borderColor = c;
+  $('sfxStatus').style.background = `${c}22`;
+
+  toast(`Pantulan ${label} aktif — pad ${padNum}`);
+}
+
+document.querySelectorAll('.sfx-pad').forEach(pad => {
+  pad.addEventListener('click', () => applySfxPad(pad));
+});
+
+/* ---------- PER-DECK MODE TOGGLE (Pantulan / Non-Pantulan) ---------- */
+function setDeckMode(deck, mode) {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const d = Decks[deck];
+  if (!d.dryGain || !d.wetGain) return;
+  d.mode = mode;
+  // Update button states for this deck only
+  document.querySelectorAll(`.deck-mode-btn[data-deck="${deck}"]`).forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.deck-mode-btn[data-deck="${deck}"][data-mode="${mode}"]`);
+  if (btn) btn.classList.add('active');
+  // Crossfade wet/dry
+  if (mode === 'pantulan') {
+    d.dryGain.gain.setTargetAtTime(0.35, audioCtx.currentTime, 0.08);
+    d.wetGain.gain.setTargetAtTime(0.85, audioCtx.currentTime, 0.08);
+    toast(`DECK ${deck} → MODE PANTULAN SUARA (echo/reverb aktif)`);
+  } else {
+    d.dryGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.08);
+    d.wetGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.08);
+    toast(`DECK ${deck} → MODE NON-PANTULAN SUARA (dry, tanpa gema)`);
+  }
+}
+// Bind click handlers for all deck mode buttons
+document.querySelectorAll('.deck-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => setDeckMode(btn.dataset.deck, btn.dataset.mode));
+});
+
+/* ---------- MIC INPUT (Pioneer DJM-9000) — Pantulan / Non-Pantulan ---------- */
+let micStream = null, micSource = null;
+let micAudioEl = null; // for file-based mic input
+let micDryGain = null, micWetGain = null, micConvolver = null, micMasterGainC = null;
+let micActive = false;
+let micMode = 'non-pantulan';
+let micSourceType = null; // 'real' | 'file'
+
+// Build the shared mic chain (dry + convolver→wet → masterGain → destination)
+function buildMicChain() {
+  if (micDryGain) return; // already built
+  initAudio();
+  micDryGain = audioCtx.createGain();
+  micWetGain = audioCtx.createGain();
+  micConvolver = audioCtx.createConvolver();
+  micConvolver.normalize = true;
+  micConvolver.buffer = createImpulseResponse(2.8, 2.2);
+  micMasterGainC = audioCtx.createGain();
+  const gVal = parseFloat($('micGainKnob').dataset.val) / 100;
+  micMasterGainC.gain.value = Math.max(0, gVal);
+
+  micDryGain.connect(micMasterGainC);
+  micConvolver.connect(micWetGain);
+  micWetGain.connect(micMasterGainC);
+  micMasterGainC.connect(audioCtx.destination);
+  micMasterGainC.connect(analyserMaster);
+
+  // Apply current mode
+  if (micMode === 'pantulan') {
+    micDryGain.gain.value = 0.4;
+    micWetGain.gain.value = 0.8;
+  } else {
+    micDryGain.gain.value = 1.0;
+    micWetGain.gain.value = 0.0;
+  }
+}
+
+// Connect any mic source (real stream or file element) to the shared chain
+function connectMicSource(src) {
+  buildMicChain();
+  src.connect(micDryGain);
+  src.connect(micConvolver);
+}
+
+function updateMicUI() {
+  const btn = $('micToggle');
+  btn.classList.add('active');
+  btn.textContent = 'MIC ON';
+  const srcTag = micSourceType === 'file' ? ' (file)' : ' (live)';
+  $('micStatus').textContent = '● LIVE' + srcTag + ' — ' + micMode.toUpperCase();
+  $('micStatus').style.color = micMode === 'pantulan' ? '#5ac8fa' : '#f5a623';
+}
+
+function stopMic() {
+  if (micStream) {
+    micStream.getTracks().forEach(t => t.stop());
+    micStream = null;
+  }
+  if (micAudioEl) {
+    try { micAudioEl.pause(); micAudioEl.currentTime = 0; } catch(e){}
+    micAudioEl = null;
+  }
+  if (micSource) { try { micSource.disconnect(); } catch(e){} micSource = null; }
+  micActive = false;
+  micSourceType = null;
+  const btn = $('micToggle');
+  btn.classList.remove('active');
+  btn.textContent = 'MIC OFF';
+  $('micStatus').textContent = '— mic idle —';
+  $('micStatus').style.color = '#666';
+}
+
+function handleMicError(err) {
+  micActive = false;
+  const btn = $('micToggle');
+  btn.classList.remove('active');
+  btn.textContent = 'MIC OFF';
+  let msg = '';
+  const n = err.name || '';
+  if (n === 'NotFoundError' || n === 'OverconstrainedError' || n === 'DevicesNotFoundError') {
+    msg = '✗ Mic tidak ditemukan. Pakai "UPLOAD MIC AUDIO" sebagai alternatif.';
+  } else if (n === 'NotAllowedError' || n === 'PermissionDeniedError' || n === 'SecurityError') {
+    msg = '✗ Izin mic ditolak. Buka via http://localhost atau klik ikon kamera di address bar → Allow.';
+  } else if (n === 'NotReadableError') {
+    msg = '✗ Mic sedang dipakai app lain (Zoom/Discord). Tutup dulu.';
+  } else {
+    msg = '✗ ' + (n || 'Error') + '. Coba "UPLOAD MIC AUDIO" sebagai alternatif.';
+  }
+  $('micStatus').textContent = msg;
+  $('micStatus').style.color = '#e74c3c';
+  toast('MIC error: ' + (err.message || n || 'gagal'));
+}
+
+async function toggleMic() {
+  const btn = $('micToggle');
+  const status = $('micStatus');
+
+  if (micActive) {
+    stopMic();
+    toast('MIC OFF — microphone dimatikan');
+    return;
+  }
+
+  // Check API support
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = '✗ Browser tidak support mic API. Pakai "UPLOAD MIC AUDIO".';
+    status.style.color = '#e74c3c';
+    toast('Mic API tidak tersedia. Gunakan UPLOAD MIC AUDIO.');
+    return;
+  }
+
+  // Check secure context (HTTPS or localhost)
+  if (window.isSecureContext === false) {
+    status.textContent = '✗ Buka via http://localhost atau HTTPS. file:// tidak support mic.';
+    status.style.color = '#e74c3c';
+    toast('Mic butuh HTTPS/localhost. Jalankan: python -m http.server di folder download, lalu buka http://localhost:8000/dj-player.html');
+    return;
+  }
+
+  try {
+    initAudio();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+    status.textContent = 'meminta izin mic...';
+    status.style.color = '#f5a623';
+
+    // Try default constraints first (most compatible)
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch (e1) {
+      // Fallback: try with explicit constraints
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          video: false
+        });
+      } catch (e2) {
+        // Last resort: try without any constraints object
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+    }
+
+    micStream = stream;
+    micSource = audioCtx.createMediaStreamSource(micStream);
+    connectMicSource(micSource);
+    micSourceType = 'real';
+    micActive = true;
+    updateMicUI();
+    toast('MIC ON — mikrofon asli aktif (' + micMode + ')');
+  } catch (err) {
+    handleMicError(err);
+  }
+}
+
+// Load audio file as mic source (fallback when real mic unavailable)
+async function loadMicFile(file) {
+  if (!file) return;
+  // Stop existing mic if active
+  if (micActive) stopMic();
+
+  initAudio();
+  // Critical: resume audio context (needed for autoplay policy)
+  if (audioCtx.state === 'suspended') {
+    try { await audioCtx.resume(); } catch(e) {}
+  }
+
+  // Create dedicated audio element for mic file (looped to act like continuous mic)
+  micAudioEl = new Audio();
+  micAudioEl.src = URL.createObjectURL(file);
+  micAudioEl.loop = true;
+  micAudioEl.crossOrigin = 'anonymous';
+  micAudioEl.load();
+
+  const fileName = file.name.replace(/\.[^.]+$/, '');
+  $('micStatus').textContent = 'loading mic file...';
+  $('micStatus').style.color = '#f5a623';
+
+  const startPlay = () => {
+    try {
+      micSource = audioCtx.createMediaElementSource(micAudioEl);
+      connectMicSource(micSource);
+      micSourceType = 'file';
+    } catch (e) {
+      $('micStatus').textContent = '✗ ' + e.message;
+      $('micStatus').style.color = '#e74c3c';
+      toast('Mic file error: ' + e.message);
+      return;
+    }
+    micAudioEl.play().then(() => {
+      micActive = true;
+      updateMicUI();
+      toast('MIC FILE ON — ' + fileName.substring(0, 28) + ' (' + micMode + ')');
+    }).catch(e => {
+      // Autoplay blocked — add one-time click handler to retry
+      if (e.name === 'NotAllowedError' || e.name === 'AbortError') {
+        $('micStatus').textContent = ' klik di mana saja untuk mulai mic file';
+        $('micStatus').style.color = '#f5a623';
+        toast('Klik sekali di halaman untuk mulai mic file (autoplay policy)');
+        const retryPlay = () => {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          micAudioEl.play().then(() => {
+            micActive = true;
+            updateMicUI();
+            toast('MIC FILE ON — ' + fileName.substring(0, 28));
+          }).catch(err => {
+            $('micStatus').textContent = '✗ ' + err.message;
+            $('micStatus').style.color = '#e74c3c';
+          });
+          document.removeEventListener('click', retryPlay);
+          document.removeEventListener('touchstart', retryPlay);
+        };
+        document.addEventListener('click', retryPlay, { once: true });
+        document.addEventListener('touchstart', retryPlay, { once: true });
+      } else {
+        $('micStatus').textContent = '✗ ' + e.message;
+        $('micStatus').style.color = '#e74c3c';
+        toast('Mic file play error: ' + e.message);
+      }
+    });
+  };
+
+  micAudioEl.addEventListener('loadedmetadata', startPlay, { once: true });
+  micAudioEl.addEventListener('error', () => {
+    $('micStatus').textContent = '✗ File audio tidak bisa dimuat';
+    $('micStatus').style.color = '#e74c3c';
+    toast('Mic file gagal dimuat — coba format lain (mp3/wav)');
+  }, { once: true });
+}
+
+function setMicMode(mode) {
+  micMode = mode;
+  // Update button states
+  document.querySelectorAll('.mic-mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.mic-mode-btn[data-mode="${mode}"]`).classList.add('active');
+
+  if (micActive && micDryGain && micWetGain) {
+    initAudio();
+    if (mode === 'pantulan') {
+      micDryGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 0.08);
+      micWetGain.gain.setTargetAtTime(0.8, audioCtx.currentTime, 0.08);
+      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : ' (live)') + ' — PANTULAN';
+      $('micStatus').style.color = '#5ac8fa';
+      toast('MIC → MODE PANTULAN SUARA (echo aktif)');
+    } else {
+      micDryGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.08);
+      micWetGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.08);
+      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : ' (live)') + ' — NON-PANTULAN';
+      $('micStatus').style.color = '#f5a623';
+      toast('MIC → MODE NON-PANTULAN SUARA (dry)');
+    }
+  } else {
+    toast('MIC mode: ' + mode + ' (aktifkan MIC dulu untuk dengar)');
+  }
+}
+
+// Bind MIC events
+$('micToggle').addEventListener('click', toggleMic);
+$('micPantulan').addEventListener('click', () => setMicMode('pantulan'));
+$('micDry').addEventListener('click', () => setMicMode('non-pantulan'));
+$('micFileInput').addEventListener('change', e => loadMicFile(e.target.files[0]));
+
+// MIC GAIN knob drag
+const micKnob = $('micGainKnob');
+let mgDrag = false, mgStartY = 0, mgStartVal = 0;
+function updateMicGain() {
+  const v = parseFloat(micKnob.dataset.val);
+  // Max 200% — rotation spans 0-135deg across 0-200 range
+  const angle = (v / 200) * 135;
+  micKnob.style.transform = `rotate(${angle}deg)`;
+  // Gain: v=100 → 1.0x (normal), v=200 → 2.0x (200% boost)
+  if (micMasterGainC) micMasterGainC.gain.value = Math.max(0, v / 100);
+}
+updateMicGain();
+micKnob.addEventListener('mousedown', e => {
+  mgDrag = true; mgStartY = e.clientY; mgStartVal = parseFloat(micKnob.dataset.val);
+  e.preventDefault();
+});
+micKnob.addEventListener('touchstart', e => {
+  mgDrag = true; mgStartY = e.touches[0].clientY; mgStartVal = parseFloat(micKnob.dataset.val);
+});
+document.addEventListener('mousemove', e => {
+  if (!mgDrag) return;
+  let v = mgStartVal + (mgStartY - e.clientY) * 1.2;
+  v = Math.max(0, Math.min(200, v));
+  micKnob.dataset.val = v;
+  updateMicGain();
+});
+document.addEventListener('touchmove', e => {
+  if (!mgDrag) return;
+  let v = mgStartVal + (mgStartY - e.touches[0].clientY) * 1.2;
+  v = Math.max(0, Math.min(200, v));
+  micKnob.dataset.val = v;
+  updateMicGain();
+});
+document.addEventListener('mouseup', () => mgDrag = false);
+document.addEventListener('touchend', () => mgDrag = false);
+
+/* ---------- RECORD BUTTON (rekam output mix ke file audio) ---------- */
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+let recDest = null;
+let recTimer = null;
+let recStartTime = 0;
+
+function toggleRecord() {
+  const btn = $('recBtn');
+  const recText = btn.querySelector('.rec-text');
+
+  if (isRecording) {
+    // Stop recording
+    try { mediaRecorder.stop(); } catch(e) {}
+    isRecording = false;
+    btn.classList.remove('recording');
+    recText.textContent = 'REC';
+    clearInterval(recTimer);
+    toast('Recording selesai — file di-download');
+    return;
+  }
+
+  // Start recording
+  initAudio();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().then(startRecInternal);
+  } else {
+    startRecInternal();
+  }
+
+  function startRecInternal() {
+    if (!audioCtx.createMediaStreamDestination) {
+      toast('Browser tidak support recording');
+      return;
+    }
+    recDest = audioCtx.createMediaStreamDestination();
+    // Tap master output (after masterGain, before destination) — connect to recDest
+    masterGain.connect(recDest);
+
+    // Pick best mime type
+    let mime = 'audio/webm';
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    for (const c of candidates) {
+      if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) { mime = c; break; }
+    }
+
+    try {
+      mediaRecorder = new MediaRecorder(recDest.stream, { mimeType: mime, audioBitsPerSecond: 192000 });
+    } catch (e) {
+      mediaRecorder = new MediaRecorder(recDest.stream);
+    }
+
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const ext = (mediaRecorder.mimeType || 'audio/webm').includes('mp4') ? 'm4a'
+                : (mediaRecorder.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dj-mix-${ts}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      // Disconnect recDest from masterGain to free resources
+      try { masterGain.disconnect(recDest); } catch(e) {}
+      toast(`Recording tersimpan — dj-mix-${ts}.${ext} (${(blob.size/1024/1024).toFixed(2)} MB)`);
+    };
+
+    mediaRecorder.start(1000); // collect data every 1s
+    isRecording = true;
+    btn.classList.add('recording');
+    recText.textContent = 'STOP';
+    recStartTime = Date.now();
+    recTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      recText.textContent = `● ${m}:${s}`;
+    }, 500);
+    toast('Recording dimulai — klik STOP untuk selesai & download');
+  }
+}
+
+$('recBtn').addEventListener('click', toggleRecord);
+
+/* ---------- AUTO-FIT TO VIEWPORT (no truncation) ---------- */
+function fitToScreen() {
+  const wrap = document.getElementById('app-wrap');
+  if (!wrap) return;
+  // Reset zoom to 1 first to measure natural size
+  wrap.style.zoom = '1';
+  // Force reflow to get accurate measurements
+  void wrap.offsetHeight;
+  const designW = 1400;
+  const naturalH = wrap.offsetHeight;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  // Scale to fit BOTH width and height; never zoom in beyond 100%
+  const scaleW = vw / designW;
+  const scaleH = vh / naturalH;
+  const zoom = Math.min(scaleW, scaleH, 1);
+  // Apply zoom (Chrome/Edge/Safari support zoom; Firefox 126+ too)
+  wrap.style.zoom = zoom.toString();
+  // Fallback for browsers without zoom support: use transform scale
+  if (!('zoom' in document.body.style) || parseFloat(wrap.style.zoom) === 0) {
+    wrap.style.transform = `scale(${zoom})`;
+    wrap.style.zoom = '';
+    // Adjust body height to compensate for transform (which doesn't affect layout)
+    document.body.style.minHeight = (naturalH * zoom + 16) + 'px';
+  } else {
+    wrap.style.transform = '';
+    document.body.style.minHeight = '';
+  }
+}
+
+/* ---------- INIT ---------- */
+updateClock();
+setInterval(updateClock, 1000);
+setInterval(updateMeters, 50);
+startBeat();
+// Auto-fit the whole UI to viewport so nothing is cut off
+window.addEventListener('resize', fitToScreen);
+window.addEventListener('load', () => setTimeout(fitToScreen, 80));
+setTimeout(fitToScreen, 80);
+toast('Selamat datang! Upload lagu ke DECK A/B (volume default sudah 0dB/80%). Tombol REC di header untuk rekam mix. MIC di mixer untuk siaran langsung.');
+
+</script>
+</body>
+</html>
