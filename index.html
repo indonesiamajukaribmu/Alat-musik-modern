@@ -891,6 +891,32 @@
     transform: translateY(-1px);
   }
   .mic-upload-btn svg { vertical-align: middle; margin-right: 4px; }
+  .mic-video-upload {
+    border-color: #5ac8fa;
+    color: #5ac8fa;
+  }
+  .mic-video-upload:hover {
+    background: linear-gradient(145deg, #2a3a4e, #1a2030);
+    box-shadow: 0 0 12px rgba(90,200,250,0.4);
+    border-color: #5ac8fa;
+  }
+  .mic-video-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #2c2c40;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  }
+  .mic-video-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
   /* Waveform mini */
   .waveform-mini {
@@ -1160,6 +1186,17 @@
   .video-area video { display: block; }
   .video-area.yt-mode video { display: none; }
   .video-area.yt-mode .yt-container { display: block; }
+  /* CRITICAL: Style the YouTube iframe directly (after YT.Player replaces div, iframe has no .yt-container class) */
+  .video-area > iframe,
+  .yt-mixer-video-wrap > iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    display: block !important;
+  }
 
   /* Per-deck YouTube input row */
   .yt-deck-row {
@@ -1305,10 +1342,11 @@
     width: 100%;
     aspect-ratio: 16/9;
     background: #000;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
     border: 1px solid #2c2c40;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
   }
   .yt-mixer-placeholder {
     position: absolute;
@@ -1601,6 +1639,15 @@
         UPLOAD MIC AUDIO
       </label>
       <input type="file" id="micFileInput" accept="audio/*" hidden>
+      <label class="mic-upload-btn mic-video-upload" for="micVideoInput">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+        UPLOAD MIC VIDEO
+      </label>
+      <input type="file" id="micVideoInput" accept="video/*" hidden>
+      <!-- Video preview for mic video -->
+      <div class="mic-video-preview" id="micVideoPreview" style="display:none;">
+        <video id="micVideoEl" loop playsinline></video>
+      </div>
       <div class="mic-mode-row">
         <div class="mic-mode-btn" data-mode="pantulan" id="micPantulan">PANTULAN</div>
         <div class="mic-mode-btn active" data-mode="non-pantulan" id="micDry">DRY</div>
@@ -2744,7 +2791,9 @@ function updateMicUI() {
   const btn = $('micToggle');
   btn.classList.add('active');
   btn.textContent = 'MIC ON';
-  const srcTag = micSourceType === 'file' ? ' (file)' : ' (live)';
+  let srcTag = ' (live)';
+  if (micSourceType === 'file') srcTag = ' (file)';
+  else if (micSourceType === 'video') srcTag = ' (video)';
   $('micStatus').textContent = '● LIVE' + srcTag + ' — ' + micMode.toUpperCase();
   $('micStatus').style.color = micMode === 'pantulan' ? '#5ac8fa' : '#f5a623';
 }
@@ -2758,6 +2807,9 @@ function stopMic() {
     try { micAudioEl.pause(); micAudioEl.currentTime = 0; } catch(e){}
     micAudioEl = null;
   }
+  // Hide mic video preview
+  const vp = $('micVideoPreview');
+  if (vp) vp.style.display = 'none';
   if (micSource) { try { micSource.disconnect(); } catch(e){} micSource = null; }
   micActive = false;
   micSourceType = null;
@@ -2925,6 +2977,83 @@ async function loadMicFile(file) {
   }, { once: true });
 }
 
+// Load video file as mic source (audio routes through mic chain, video shows in preview)
+async function loadMicVideoFile(file) {
+  if (!file) return;
+  // Stop existing mic if active
+  if (micActive) stopMic();
+
+  initAudio();
+  if (audioCtx.state === 'suspended') {
+    try { await audioCtx.resume(); } catch(e) {}
+  }
+
+  // Get the existing video element (in mic-video-preview)
+  const videoEl = $('micVideoEl');
+  if (!videoEl) { toast('Video element tidak ditemukan'); return; }
+  videoEl.src = URL.createObjectURL(file);
+  videoEl.load();
+
+  // Show video preview
+  $('micVideoPreview').style.display = 'block';
+
+  const fileName = file.name.replace(/\.[^.]+$/, '');
+  $('micStatus').textContent = 'loading mic video...';
+  $('micStatus').style.color = '#f5a623';
+
+  const startVideoPlay = () => {
+    try {
+      micSource = audioCtx.createMediaElementSource(videoEl);
+      connectMicSource(micSource);
+      micSourceType = 'video';
+      micAudioEl = videoEl; // reuse micAudioEl for stop logic (pause/currentTime work on video too)
+    } catch(e) {
+      $('micStatus').textContent = '✗ ' + e.message;
+      $('micStatus').style.color = '#e74c3c';
+      toast('Mic video error: ' + e.message);
+      return;
+    }
+    videoEl.play().then(() => {
+      micActive = true;
+      updateMicUI();
+      toast('MIC VIDEO ON — ' + fileName.substring(0, 24) + ' (' + micMode + ')');
+    }).catch(e => {
+      // Autoplay blocked — add one-time click handler to retry
+      if (e.name === 'NotAllowedError' || e.name === 'AbortError') {
+        $('micStatus').textContent = ' klik di mana saja untuk mulai mic video';
+        $('micStatus').style.color = '#f5a623';
+        toast('Klik sekali di halaman untuk mulai mic video (autoplay policy)');
+        const retryPlay = () => {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          videoEl.play().then(() => {
+            micActive = true;
+            updateMicUI();
+            toast('MIC VIDEO ON — ' + fileName.substring(0, 24));
+          }).catch(err => {
+            $('micStatus').textContent = '✗ ' + err.message;
+            $('micStatus').style.color = '#e74c3c';
+          });
+          document.removeEventListener('click', retryPlay);
+          document.removeEventListener('touchstart', retryPlay);
+        };
+        document.addEventListener('click', retryPlay, { once: true });
+        document.addEventListener('touchstart', retryPlay, { once: true });
+      } else {
+        $('micStatus').textContent = '✗ ' + e.message;
+        $('micStatus').style.color = '#e74c3c';
+        toast('Mic video play error: ' + e.message);
+      }
+    });
+  };
+
+  videoEl.addEventListener('loadedmetadata', startVideoPlay, { once: true });
+  videoEl.addEventListener('error', () => {
+    $('micStatus').textContent = '✗ Video tidak bisa dimuat';
+    $('micStatus').style.color = '#e74c3c';
+    toast('Mic video gagal dimuat — coba format lain (mp4/webm)');
+  }, { once: true });
+}
+
 function setMicMode(mode) {
   micMode = mode;
   // Update button states
@@ -2936,13 +3065,13 @@ function setMicMode(mode) {
     if (mode === 'pantulan') {
       micDryGain.gain.setTargetAtTime(0.4, audioCtx.currentTime, 0.08);
       micWetGain.gain.setTargetAtTime(0.8, audioCtx.currentTime, 0.08);
-      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : ' (live)') + ' — PANTULAN';
+      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : micSourceType === 'video' ? ' (video)' : ' (live)') + ' — PANTULAN';
       $('micStatus').style.color = '#5ac8fa';
       toast('MIC → MODE PANTULAN SUARA (echo aktif)');
     } else {
       micDryGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.08);
       micWetGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.08);
-      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : ' (live)') + ' — NON-PANTULAN';
+      $('micStatus').textContent = '● LIVE' + (micSourceType === 'file' ? ' (file)' : micSourceType === 'video' ? ' (video)' : ' (live)') + ' — NON-PANTULAN';
       $('micStatus').style.color = '#f5a623';
       toast('MIC → MODE NON-PANTULAN SUARA (dry)');
     }
@@ -2956,6 +3085,7 @@ $('micToggle').addEventListener('click', toggleMic);
 $('micPantulan').addEventListener('click', () => setMicMode('pantulan'));
 $('micDry').addEventListener('click', () => setMicMode('non-pantulan'));
 $('micFileInput').addEventListener('change', e => loadMicFile(e.target.files[0]));
+$('micVideoInput').addEventListener('change', e => loadMicVideoFile(e.target.files[0]));
 
 // MIC GAIN knob drag
 const micKnob = $('micGainKnob');
@@ -3123,7 +3253,7 @@ function parseYouTubeUrl(url) {
 function loadYouTubeToSection(section, url) {
   const videoId = parseYouTubeUrl(url);
   if (!videoId) {
-    toast('URL YouTube tidak valid untuk ' + section);
+    toast('URL YouTube tidak valid untuk ' + (section === 'M' ? 'Mixer' : 'DECK ' + section));
     return;
   }
   const st = ytState[section];
@@ -3133,24 +3263,29 @@ function loadYouTubeToSection(section, url) {
   if (section === 'A' || section === 'B') {
     const d = Decks[section];
     d.videoArea.classList.add('active', 'yt-mode');
-    d.isVideo = false; // not playing local file
+    d.isVideo = false;
     try { d.audio.pause(); } catch(e){}
-    d.vinyl.classList.remove('spinning');
-    d.tonearm.classList.remove('active');
     d.isPlaying = false;
     updatePlayBtn(section);
   } else if (section === 'M') {
-    // Mixer: hide placeholder
+    // Mixer: hide placeholder + show YouTube container
     const ph = $('ytPlaceholderM');
     if (ph) ph.style.display = 'none';
+    const cont = document.getElementById('ytContainerM');
+    if (cont) cont.classList.add('active');
   }
 
-  // Wait for API if not ready
+  // Wait for API if not ready (max 10s)
   if (!ytAPIReady || typeof YT === 'undefined') {
+    let attempts = 0;
     const wait = setInterval(() => {
+      attempts++;
       if (ytAPIReady && typeof YT !== 'undefined') {
         clearInterval(wait);
         createSectionPlayer(section, videoId);
+      } else if (attempts > 50) {
+        clearInterval(wait);
+        toast('YouTube API gagal dimuat. Cek koneksi internet.');
       }
     }, 200);
     return;
@@ -3160,47 +3295,104 @@ function loadYouTubeToSection(section, url) {
 
 function createSectionPlayer(section, videoId) {
   const st = ytState[section];
+  // If player exists and works, just load new video
   if (st.player && st.player.loadVideoById) {
-    st.player.loadVideoById(videoId);
-    st.player.setVolume(parseInt($('ytVol' + section).value));
+    try {
+      st.player.loadVideoById(videoId);
+      st.player.setVolume(parseInt($('ytVol' + section).value));
+      return;
+    } catch(e) {
+      // Player broken — destroy and recreate
+      try { st.player.destroy(); } catch(e2){}
+      st.player = null;
+    }
+  }
+  // Ensure container div exists (YT.Player replaces div with iframe; after destroy, need recreate)
+  let container = document.getElementById(st.containerId);
+  if (!container) {
+    const wrap = section === 'A' ? $('vidAreaA') : section === 'B' ? $('vidAreaB') : document.querySelector('.yt-mixer-video-wrap');
+    if (wrap) {
+      container = document.createElement('div');
+      container.id = st.containerId;
+      container.className = 'yt-container';
+      wrap.appendChild(container);
+    }
+  }
+  if (!container) {
+    toast('Container YouTube tidak ditemukan untuk ' + section);
     return;
   }
-  st.player = new YT.Player(st.containerId, {
-    height: '100%',
-    width: '100%',
-    videoId: videoId,
-    playerVars: { 'autoplay': 1, 'controls': 1, 'modestbranding': 1, 'rel': 0, 'playsinline': 1 },
-    events: {
-      'onReady': (e) => onSectionYtReady(section, e),
-      'onStateChange': (e) => onSectionYtStateChange(section, e),
-      'onError': (e) => onSectionYtError(section, e)
-    }
-  });
+  // Create new YT.Player — replaces container div with iframe
+  try {
+    st.player = new YT.Player(st.containerId, {
+      height: '100%',
+      width: '100%',
+      videoId: videoId,
+      playerVars: { 'autoplay': 1, 'controls': 1, 'modestbranding': 1, 'rel': 0, 'playsinline': 1, 'enablejsapi': 1, 'origin': window.location.origin },
+      events: {
+        'onReady': (e) => onSectionYtReady(section, e),
+        'onStateChange': (e) => onSectionYtStateChange(section, e),
+        'onError': (e) => onSectionYtError(section, e)
+      }
+    });
+  } catch(err) {
+    toast('Gagal buat YouTube player: ' + err.message);
+  }
 }
 
 function onSectionYtReady(section, event) {
   const vol = parseInt($('ytVol' + section).value);
-  event.target.setVolume(vol);
-  event.target.playVideo();
+  try { event.target.setVolume(vol); } catch(e){}
+  // Force play with retry (autoplay policy may block first attempt)
+  try {
+    event.target.playVideo();
+  } catch(e){}
+  // Retry play after short delay in case autoplay was blocked
+  setTimeout(() => {
+    try {
+      if (ytState[section].player && ytState[section].player.getPlayerState && ytState[section].player.getPlayerState() === -1) {
+        ytState[section].player.playVideo();
+      }
+    } catch(e){}
+  }, 800);
 }
 
 function onSectionYtStateChange(section, event) {
-  // Update track name for deck A/B
-  if ((section === 'A' || section === 'B') && event.data === 1) {
-    try {
-      const data = ytState[section].player.getVideoData();
-      if (data && data.title) {
-        Decks[section].name.textContent = '▶ ' + data.title;
-        Decks[section].labelText.textContent = data.title.substring(0, 14).toUpperCase();
-      }
-    } catch(e) {}
+  const state = event.data;
+  // State: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+  const stateNames = { [-1]:'unstarted', 0:'ENDED', 1:'PLAYING', 2:'PAUSED', 3:'buffering', 5:'cued' };
+  // For Deck A/B: spin vinyl when playing, stop when paused/ended
+  if (section === 'A' || section === 'B') {
+    const d = Decks[section];
+    if (state === 1) { // PLAYING
+      d.vinyl.classList.add('spinning');
+      d.tonearm.classList.add('active');
+      // Update track name with YouTube title
+      try {
+        const data = ytState[section].player.getVideoData();
+        if (data && data.title) {
+          d.name.textContent = '▶ ' + data.title;
+          d.labelText.textContent = data.title.substring(0, 14).toUpperCase();
+        }
+      } catch(e) {}
+    } else if (state === 2 || state === 0) { // PAUSED or ENDED
+      d.vinyl.classList.remove('spinning');
+      d.tonearm.classList.remove('active');
+    }
+    // For buffering (3), keep current state
   }
 }
 
 function onSectionYtError(section, event) {
-  const errMap = { 2:'Invalid ID', 5:'HTML5 error', 100:'Video private/tidak ada', 101:'Tidak allow embed', 150:'Tidak allow embed' };
+  const errMap = { 2:'ID video tidak valid', 5:'HTML5 error', 100:'Video private/tidak ditemukan', 101:'Video tidak allow embed', 150:'Video tidak allow embed' };
   const msg = errMap[event.data] || 'Error ' + event.data;
-  toast('YouTube ' + section + ': ' + msg);
+  toast('YouTube ' + (section === 'M' ? 'Mixer' : 'DECK ' + section) + ': ' + msg + '. Coba link lain.');
+  // Stop vinyl if error on deck
+  if (section === 'A' || section === 'B') {
+    const d = Decks[section];
+    d.vinyl.classList.remove('spinning');
+    d.tonearm.classList.remove('active');
+  }
 }
 
 // Bind YouTube controls for all 3 sections
@@ -3263,6 +3455,9 @@ function onSectionYtError(section, event) {
     } else if (section === 'M') {
       const ph = $('ytPlaceholderM');
       if (ph) ph.style.display = 'flex';
+      // Remove active class from container (if it exists as div)
+      const cont = document.getElementById('ytContainerM');
+      if (cont) cont.classList.remove('active');
     }
     toast('YouTube ' + (section === 'M' ? 'Mixer' : 'DECK ' + section) + ' cleared');
   });
