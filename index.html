@@ -12,7 +12,7 @@
     font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
     min-height: 100vh;
     user-select: none;
-    overflow-x: hidden;
+    overflow-x: auto;
     overflow-y: auto;
   }
   body {
@@ -24,25 +24,24 @@
     width: 100%;
   }
 
-  /* ===== APP WRAPPER (auto-fit to viewport, no truncation) ===== */
+  /* ===== APP WRAPPER (responsive, spacious — no zoom-down) ===== */
   #app-wrap {
-    width: 1400px;
-    max-width: 1400px;
+    width: 100%;
+    max-width: 1700px;
+    min-width: 1280px;
     margin: 0 auto;
-    padding: 16px;
+    padding: 18px;
     box-sizing: border-box;
-    transform-origin: top center;
   }
 
   /* ===== HEADER ===== */
   .header {
     width: 100%;
-    max-width: 1400px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding: 10px 18px;
+    margin-bottom: 18px;
+    padding: 12px 22px;
     background: linear-gradient(90deg, rgba(233,69,96,0.15), rgba(245,166,35,0.15), rgba(76,217,99,0.15));
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
@@ -126,17 +125,16 @@
   /* ===== CONSOLE ===== */
   .console {
     width: 100%;
-    max-width: 1400px;
     display: grid;
-    grid-template-columns: 1fr 0.8fr 1fr;
-    gap: 14px;
+    grid-template-columns: 1fr 0.85fr 1fr;
+    gap: 18px;
   }
 
   /* ===== DECK ===== */
   .deck {
     background: linear-gradient(145deg, #2a2a3e 0%, #15151f 100%);
     border-radius: 16px;
-    padding: 18px;
+    padding: 22px;
     border: 1px solid #2c2c40;
     box-shadow: 0 14px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
     position: relative;
@@ -168,9 +166,9 @@
   /* ===== VINYL / CD ROOM ===== */
   .vinyl-wrap {
     position: relative;
-    width: 260px;
-    height: 260px;
-    margin: 0 auto 14px;
+    width: 290px;
+    height: 290px;
+    margin: 0 auto 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -227,8 +225,8 @@
   /* Vinyl disc */
   .vinyl {
     position: relative;
-    width: 230px;
-    height: 230px;
+    width: 255px;
+    height: 255px;
     border-radius: 50%;
     background:
       repeating-radial-gradient(circle at center,
@@ -409,10 +407,10 @@
     background: linear-gradient(145deg, #2a2a3e, #15151f);
     border: 1px solid #3a3a4e;
     color: #ccc;
-    padding: 10px 4px;
+    padding: 13px 4px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
     transition: all 0.1s;
@@ -457,11 +455,11 @@
     text-align: center;
   }
   .knob {
-    width: 50px;
-    height: 50px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, #4a4a5e 0%, #2a2a3e 60%, #15151f 100%);
-    margin: 0 auto 4px;
+    margin: 0 auto 5px;
     position: relative;
     cursor: ns-resize;
     box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.1);
@@ -499,10 +497,10 @@
     background: linear-gradient(145deg, #1a3a5e, #0d2336);
     border: 1px solid #2a5a8e;
     color: #5ac8fa;
-    padding: 12px 4px;
+    padding: 14px 4px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     text-align: center;
     transition: all 0.1s;
@@ -702,6 +700,25 @@
     text-align: center;
     padding-top: 8px;
     border-top: 1px solid #2c2c40;
+    position: relative;
+  }
+  .master-section::after {
+    content: 'MAX 200%';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 8px;
+    color: #5ac8fa;
+    letter-spacing: 1px;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(90,200,250,0.5);
+  }
+  .master-val-display {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    color: #4cd963;
+    margin-top: 2px;
+    text-shadow: 0 0 5px rgba(76,217,99,0.5);
   }
   .master-knob {
     width: 60px; height: 60px;
@@ -891,12 +908,11 @@
   /* ===== SOUND EFFECT PANEL (Echo/Reverb Quality) ===== */
   .sound-fx-panel {
     width: 100%;
-    max-width: 1400px;
-    margin-top: 14px;
+    margin-top: 18px;
     background: linear-gradient(145deg, #1f1f2e 0%, #0f0f18 100%);
     border: 1px solid #2c2c40;
     border-radius: 16px;
-    padding: 16px 18px;
+    padding: 20px 22px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
   }
   .sfx-header {
@@ -934,13 +950,13 @@
   .sfx-pads {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
   .sfx-pad {
     background: linear-gradient(160deg, #2a2a3e, #15151f);
     border: 2px solid #3a3a4e;
     border-radius: 12px;
-    padding: 14px 8px;
+    padding: 18px 10px;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s;
@@ -980,12 +996,12 @@
     50% { opacity: 0.3; }
   }
   .pad-num {
-    font-size: 28px;
+    font-size: 34px;
     font-weight: 900;
     color: var(--pad-color);
     text-shadow: 0 0 12px var(--pad-color);
     line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     font-family: 'Impact', sans-serif;
   }
   .pad-quality {
@@ -1026,12 +1042,12 @@
 
   /* ===== FOOTER ===== */
   .footer {
-    margin-top: 14px;
+    margin-top: 18px;
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
     color: #555;
-    max-width: 1400px;
     width: 100%;
+    padding: 12px 18px;
   }
   .footer span { color: #888; }
   .footer .hint {
@@ -1126,6 +1142,224 @@
     line-height: 1.25;
   }
 
+  /* ===== YOUTUBE (per-deck, embedded in Deck A/B/Mixer) ===== */
+  .yt-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: none;
+  }
+  .yt-container.active { display: block; }
+  .yt-container iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+  }
+  .video-area { position: relative; }
+  .video-area video { display: block; }
+  .video-area.yt-mode video { display: none; }
+  .video-area.yt-mode .yt-container { display: block; }
+
+  /* Per-deck YouTube input row */
+  .yt-deck-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+  .yt-deck-logo {
+    color: #ff0000;
+    font-size: 12px;
+    text-shadow: 0 0 6px rgba(255,0,0,0.6);
+    font-weight: 800;
+  }
+  .yt-deck-input {
+    flex: 1;
+    background: #0a0a14;
+    border: 1px solid #2c2c40;
+    color: #fff;
+    padding: 7px 9px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    transition: all 0.15s;
+    min-width: 0;
+  }
+  .yt-deck-input:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 8px rgba(255,0,0,0.3);
+  }
+  .yt-deck-input::placeholder { color: #555; }
+  .yt-deck-load {
+    background: linear-gradient(145deg, #ff0000, #b00000);
+    color: #fff;
+    border: 1px solid #ff0000;
+    padding: 7px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    box-shadow: 0 0 8px rgba(255,0,0,0.4);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .yt-deck-load:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255,0,0,0.6);
+  }
+  .yt-deck-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .yt-deck-btn {
+    background: linear-gradient(160deg, #2a2a3e, #15151f);
+    border: 1px solid #3a3a4e;
+    color: #ccc;
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .yt-deck-btn:hover {
+    border-color: #ff0000;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(255,0,0,0.3);
+  }
+  .yt-deck-btn:active { transform: scale(0.93); }
+  .yt-deck-vol {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: linear-gradient(90deg, #ff0000, #f5a623);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    min-width: 30px;
+  }
+  .yt-deck-vol::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(255,255,255,0.5);
+  }
+  .yt-deck-vol::-moz-range-thumb {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    border: 0;
+  }
+  .yt-deck-vol-display {
+    font-family: 'Courier New', monospace;
+    font-size: 9px;
+    color: #ff0000;
+    min-width: 30px;
+    text-align: right;
+    text-shadow: 0 0 4px rgba(255,0,0,0.5);
+  }
+  .yt-deck-clear {
+    background: rgba(231,76,60,0.15);
+    border: 1px solid rgba(231,76,60,0.4);
+    color: #e74c3c;
+    padding: 5px 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 700;
+    transition: all 0.15s;
+  }
+  .yt-deck-clear:hover {
+    background: rgba(231,76,60,0.3);
+    color: #fff;
+  }
+
+  /* YouTube in mixer (compact monitor) */
+  .yt-mixer-section {
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #2c2c40;
+  }
+  .yt-mixer-label {
+    font-size: 9px;
+    color: #ff0000;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 700;
+    text-shadow: 0 0 5px rgba(255,0,0,0.4);
+    text-align: center;
+  }
+  .yt-mixer-video-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #2c2c40;
+    margin-bottom: 6px;
+  }
+  .yt-mixer-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 9px;
+    letter-spacing: 1px;
+    pointer-events: none;
+  }
+  .yt-mixer-input {
+    width: 100%;
+    background: #0a0a14;
+    border: 1px solid #2c2c40;
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 5px;
+    font-size: 9px;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    margin-bottom: 5px;
+    box-sizing: border-box;
+  }
+  .yt-mixer-input:focus {
+    border-color: #ff0000;
+    box-shadow: 0 0 6px rgba(255,0,0,0.3);
+  }
+  .yt-mixer-input::placeholder { color: #555; }
+  .yt-mixer-load {
+    width: 100%;
+    background: linear-gradient(145deg, #ff0000, #b00000);
+    color: #fff;
+    border: 1px solid #ff0000;
+    padding: 7px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    box-shadow: 0 0 8px rgba(255,0,0,0.4);
+  }
+  .yt-mixer-load:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,0,0,0.6); }
+  .yt-mixer-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   /* ===== FOOTER end ===== 
 
   /* ===== TOAST ===== */
@@ -1147,15 +1381,18 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* Responsive fallback for very small screens (mobile) */
-  @media (max-width: 560px) {
-    .console { grid-template-columns: 1fr; }
-    .vinyl-wrap { width: 200px; height: 200px; }
-    .vinyl { width: 180px; height: 180px; }
-    .sfx-pads { grid-template-columns: repeat(2, 1fr); }
-    #app-wrap { width: 100% !important; }
+  /* Responsive fallback for very small screens (mobile) — stack vertically */
+  @media (max-width: 900px) {
+    .console { grid-template-columns: 1fr; min-width: 0; }
+    .vinyl-wrap { width: 220px; height: 220px; }
+    .vinyl { width: 200px; height: 200px; }
+    .sfx-pads { grid-template-columns: repeat(3, 1fr); }
+    #app-wrap { min-width: 0; width: 100%; padding: 12px; }
+    .yt-body { grid-template-columns: 1fr !important; }
   }
 </style>
+<!-- YouTube IFrame Player API (loaded async, calls onYouTubeIframeAPIReady when ready) -->
+<script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
 
@@ -1216,9 +1453,10 @@
     <!-- PROGRESS -->
     <div class="progress" id="progA"><div class="progress-fill" id="fillA"></div></div>
 
-    <!-- VIDEO AREA -->
+    <!-- VIDEO AREA (supports both uploaded video file AND YouTube) -->
     <div class="video-area" id="vidAreaA">
       <video id="vidA" muted playsinline></video>
+      <div id="ytContainerA" class="yt-container"></div>
     </div>
 
     <!-- UPLOAD -->
@@ -1233,6 +1471,21 @@
       </label>
       <input type="file" id="fileA" accept="audio/*" hidden>
       <input type="file" id="fileVA" accept="video/*" hidden>
+    </div>
+
+    <!-- YOUTUBE INPUT (per-deck) -->
+    <div class="yt-deck-row">
+      <span class="yt-deck-logo">▶</span>
+      <input type="text" class="yt-deck-input" id="ytUrlA" placeholder="Link YouTube untuk DECK A...">
+      <button class="yt-deck-load" id="ytLoadA">LOAD</button>
+    </div>
+    <div class="yt-deck-ctrl">
+      <button class="yt-deck-btn" id="ytPlayA">▶</button>
+      <button class="yt-deck-btn" id="ytPauseA">❚❚</button>
+      <button class="yt-deck-btn" id="ytStopA">■</button>
+      <input type="range" class="yt-deck-vol" id="ytVolA" min="0" max="100" value="80">
+      <span class="yt-deck-vol-display" id="ytVolDisplayA">80%</span>
+      <button class="yt-deck-clear" id="ytClearA">CLR</button>
     </div>
 
     <!-- CONTROL BUTTONS -->
@@ -1336,6 +1589,7 @@
     <div class="master-section">
       <div class="master-label">MASTER <span style="color:#f5a623">0-200%</span></div>
       <div class="master-knob" id="masterKnob" data-val="100"></div>
+      <div class="master-val-display" id="masterValDisplay">100%</div>
     </div>
 
     <!-- ===== MIC SECTION (Pioneer DJM-9000) ===== -->
@@ -1367,6 +1621,24 @@
       </div>
       <div class="xfade-labels">
         <span>A</span><span>MIX</span><span>B</span>
+      </div>
+    </div>
+
+    <!-- YOUTUBE MONITOR (in mixer) -->
+    <div class="yt-mixer-section">
+      <div class="yt-mixer-label">▶ YOUTUBE MONITOR</div>
+      <div class="yt-mixer-video-wrap">
+        <div id="ytContainerM" class="yt-container"></div>
+        <div class="yt-mixer-placeholder" id="ytPlaceholderM">paste link →</div>
+      </div>
+      <input type="text" class="yt-mixer-input" id="ytUrlM" placeholder="Link YouTube...">
+      <button class="yt-mixer-load" id="ytLoadM">LOAD</button>
+      <div class="yt-mixer-ctrl">
+        <button class="yt-deck-btn" id="ytPlayM">▶</button>
+        <button class="yt-deck-btn" id="ytPauseM">❚❚</button>
+        <button class="yt-deck-btn" id="ytStopM">■</button>
+        <input type="range" class="yt-deck-vol" id="ytVolM" min="0" max="100" value="80">
+        <span class="yt-deck-vol-display" id="ytVolDisplayM">80%</span>
       </div>
     </div>
   </div>
@@ -1404,9 +1676,10 @@
     <!-- PROGRESS -->
     <div class="progress" id="progB"><div class="progress-fill" id="fillB"></div></div>
 
-    <!-- VIDEO AREA -->
+    <!-- VIDEO AREA (supports both uploaded video file AND YouTube) -->
     <div class="video-area" id="vidAreaB">
       <video id="vidB" muted playsinline></video>
+      <div id="ytContainerB" class="yt-container"></div>
     </div>
 
     <!-- UPLOAD -->
@@ -1421,6 +1694,21 @@
       </label>
       <input type="file" id="fileB" accept="audio/*" hidden>
       <input type="file" id="fileVB" accept="video/*" hidden>
+    </div>
+
+    <!-- YOUTUBE INPUT (per-deck) -->
+    <div class="yt-deck-row">
+      <span class="yt-deck-logo">▶</span>
+      <input type="text" class="yt-deck-input" id="ytUrlB" placeholder="Link YouTube untuk DECK B...">
+      <button class="yt-deck-load" id="ytLoadB">LOAD</button>
+    </div>
+    <div class="yt-deck-ctrl">
+      <button class="yt-deck-btn" id="ytPlayB">▶</button>
+      <button class="yt-deck-btn" id="ytPauseB">❚❚</button>
+      <button class="yt-deck-btn" id="ytStopB">■</button>
+      <input type="range" class="yt-deck-vol" id="ytVolB" min="0" max="100" value="80">
+      <span class="yt-deck-vol-display" id="ytVolDisplayB">80%</span>
+      <button class="yt-deck-clear" id="ytClearB">CLR</button>
     </div>
 
     <!-- CONTROL BUTTONS -->
@@ -1547,7 +1835,7 @@
 <!-- FOOTER -->
 <div class="footer">
   <span>Virtual DJ Console • Support Audio MP3/WAV/OGG/M4A & Video MP4/WebM/MOV</span>
-  <div class="hint">Tip: Upload lagu/video dari folder mana pun di Android / PC / Laptop. Vinyl berputar otomatis saat play. Tarik knob EQ dengan mouse untuk adjust High/Mid/Low. Pilih pad Sound Effect 1-6 untuk kualitas pantulan suara.</div>
+  <div class="hint">Tip: Upload lagu/video dari folder mana pun di Android / PC / Laptop. Vinyl berputar otomatis saat play. Tarik knob EQ dengan mouse untuk adjust High/Mid/Low. Pilih pad Sound Effect 1-6 untuk kualitas pantulan suara. Volume MASTER/MIC/FADER bisa sampai 200%. Tiap DECK A/B & Mixer punya input YouTube sendiri — paste link, klik LOAD. Mode Pantulan/Non-Pantulan tetap aktif per deck untuk audio upload.</div>
 </div>
 
 </div><!-- /#app-wrap -->
@@ -1618,6 +1906,7 @@ let analyser1 = null, analyser2 = null, analyserMaster = null;
 let sourceA = null, sourceB = null;
 let eqFiltersA = null, eqFiltersB = null;
 let dryGain = null, wetGain = null, reverbConvolver = null;
+let masterCompressor = null; // limiter for 200% volume protection
 let activeSfxPad = null;
 
 function initAudio() {
@@ -1686,12 +1975,22 @@ function initAudio() {
   // default empty impulse (will be replaced when pad clicked)
   reverbConvolver.buffer = createImpulseResponse(0.1, 6);
 
+  // ===== MASTER COMPRESSOR / LIMITER (prevent clipping at 200% volume) =====
+  masterCompressor = audioCtx.createDynamicsCompressor();
+  masterCompressor.threshold.value = -3;     // start compressing above -3dB
+  masterCompressor.knee.value = 6;           // soft knee
+  masterCompressor.ratio.value = 12;         // 12:1 hard limit
+  masterCompressor.attack.value = 0.003;     // 3ms fast attack
+  masterCompressor.release.value = 0.25;     // 250ms release
+  masterCompressor.connect(audioCtx.destination);
+
   masterGain.connect(dryGain);
   masterGain.connect(reverbConvolver);
   reverbConvolver.connect(wetGain);
 
-  dryGain.connect(audioCtx.destination);
-  wetGain.connect(audioCtx.destination);
+  // Route dry + wet through compressor → destination (prevents clipping at >100% volume)
+  dryGain.connect(masterCompressor);
+  wetGain.connect(masterCompressor);
 
   // ===== Apply current knob/fader values (so changes made before init take effect) =====
   updateMaster(); // apply master knob value to masterGain
@@ -2018,6 +2317,14 @@ function updateMaster() {
   masterKnob.style.transform = `rotate(${angle}deg)`;
   // Gain: val=100 → 1.0x (normal), val=200 → 2.0x (200% boost)
   if (masterGain) masterGain.gain.value = Math.max(0, val / 100);
+  // Update percentage display with color coding
+  const disp = document.getElementById('masterValDisplay');
+  if (disp) {
+    disp.textContent = Math.round(val) + '%';
+    if (val <= 100) disp.style.color = '#4cd963';        // green: safe
+    else if (val <= 150) disp.style.color = '#f5a623';   // yellow: boosting
+    else disp.style.color = '#e74c3c';                    // red: max boost (compressor active)
+  }
 }
 updateMaster();
 masterKnob.addEventListener('mousedown', e => {
@@ -2778,34 +3085,196 @@ function toggleRecord() {
 
 $('recBtn').addEventListener('click', toggleRecord);
 
-/* ---------- AUTO-FIT TO VIEWPORT (no truncation) ---------- */
-function fitToScreen() {
-  const wrap = document.getElementById('app-wrap');
-  if (!wrap) return;
-  // Reset zoom to 1 first to measure natural size
-  wrap.style.zoom = '1';
-  // Force reflow to get accurate measurements
-  void wrap.offsetHeight;
-  const designW = 1400;
-  const naturalH = wrap.offsetHeight;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  // Scale to fit BOTH width and height; never zoom in beyond 100%
-  const scaleW = vw / designW;
-  const scaleH = vh / naturalH;
-  const zoom = Math.min(scaleW, scaleH, 1);
-  // Apply zoom (Chrome/Edge/Safari support zoom; Firefox 126+ too)
-  wrap.style.zoom = zoom.toString();
-  // Fallback for browsers without zoom support: use transform scale
-  if (!('zoom' in document.body.style) || parseFloat(wrap.style.zoom) === 0) {
-    wrap.style.transform = `scale(${zoom})`;
-    wrap.style.zoom = '';
-    // Adjust body height to compensate for transform (which doesn't affect layout)
-    document.body.style.minHeight = (naturalH * zoom + 16) + 'px';
-  } else {
-    wrap.style.transform = '';
-    document.body.style.minHeight = '';
+/* ---------- YOUTUBE PLAYER (per-deck: A, B, M=mixer) ---------- */
+let ytAPIReady = false;
+// Per-section YouTube state
+const ytState = {
+  A: { player: null, videoId: null, containerId: 'ytContainerA' },
+  B: { player: null, videoId: null, containerId: 'ytContainerB' },
+  M: { player: null, videoId: null, containerId: 'ytContainerM' }
+};
+
+// Called by YouTube IFrame API when script loaded
+window.onYouTubeIframeAPIReady = function() {
+  ytAPIReady = true;
+};
+
+// Parse YouTube URL → 11-char video ID (supports all formats)
+function parseYouTubeUrl(url) {
+  if (!url) return null;
+  url = url.trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+  const patterns = [
+    /youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
+    /youtu\.be\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/,
+    /music\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
+    /m\.youtube\.com\/watch\?v=([A-Za-z0-9_-]{11})/,
+    /[?&]v=([A-Za-z0-9_-]{11})/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
   }
+  return null;
+}
+
+function loadYouTubeToSection(section, url) {
+  const videoId = parseYouTubeUrl(url);
+  if (!videoId) {
+    toast('URL YouTube tidak valid untuk ' + section);
+    return;
+  }
+  const st = ytState[section];
+  st.videoId = videoId;
+
+  // For Deck A/B: show video area, hide HTML5 video, show YT container
+  if (section === 'A' || section === 'B') {
+    const d = Decks[section];
+    d.videoArea.classList.add('active', 'yt-mode');
+    d.isVideo = false; // not playing local file
+    try { d.audio.pause(); } catch(e){}
+    d.vinyl.classList.remove('spinning');
+    d.tonearm.classList.remove('active');
+    d.isPlaying = false;
+    updatePlayBtn(section);
+  } else if (section === 'M') {
+    // Mixer: hide placeholder
+    const ph = $('ytPlaceholderM');
+    if (ph) ph.style.display = 'none';
+  }
+
+  // Wait for API if not ready
+  if (!ytAPIReady || typeof YT === 'undefined') {
+    const wait = setInterval(() => {
+      if (ytAPIReady && typeof YT !== 'undefined') {
+        clearInterval(wait);
+        createSectionPlayer(section, videoId);
+      }
+    }, 200);
+    return;
+  }
+  createSectionPlayer(section, videoId);
+}
+
+function createSectionPlayer(section, videoId) {
+  const st = ytState[section];
+  if (st.player && st.player.loadVideoById) {
+    st.player.loadVideoById(videoId);
+    st.player.setVolume(parseInt($('ytVol' + section).value));
+    return;
+  }
+  st.player = new YT.Player(st.containerId, {
+    height: '100%',
+    width: '100%',
+    videoId: videoId,
+    playerVars: { 'autoplay': 1, 'controls': 1, 'modestbranding': 1, 'rel': 0, 'playsinline': 1 },
+    events: {
+      'onReady': (e) => onSectionYtReady(section, e),
+      'onStateChange': (e) => onSectionYtStateChange(section, e),
+      'onError': (e) => onSectionYtError(section, e)
+    }
+  });
+}
+
+function onSectionYtReady(section, event) {
+  const vol = parseInt($('ytVol' + section).value);
+  event.target.setVolume(vol);
+  event.target.playVideo();
+}
+
+function onSectionYtStateChange(section, event) {
+  // Update track name for deck A/B
+  if ((section === 'A' || section === 'B') && event.data === 1) {
+    try {
+      const data = ytState[section].player.getVideoData();
+      if (data && data.title) {
+        Decks[section].name.textContent = '▶ ' + data.title;
+        Decks[section].labelText.textContent = data.title.substring(0, 14).toUpperCase();
+      }
+    } catch(e) {}
+  }
+}
+
+function onSectionYtError(section, event) {
+  const errMap = { 2:'Invalid ID', 5:'HTML5 error', 100:'Video private/tidak ada', 101:'Tidak allow embed', 150:'Tidak allow embed' };
+  const msg = errMap[event.data] || 'Error ' + event.data;
+  toast('YouTube ' + section + ': ' + msg);
+}
+
+// Bind YouTube controls for all 3 sections
+['A', 'B', 'M'].forEach(section => {
+  const loadBtn = $('ytLoad' + section);
+  const urlInput = $('ytUrl' + section);
+  const playBtn = $('ytPlay' + section);
+  const pauseBtn = $('ytPause' + section);
+  const stopBtn = $('ytStop' + section);
+  const volSlider = $('ytVol' + section);
+  const volDisplay = $('ytVolDisplay' + section);
+  const clearBtn = $('ytClear' + section);
+
+  if (loadBtn) loadBtn.addEventListener('click', () => {
+    if (urlInput && urlInput.value.trim()) loadYouTubeToSection(section, urlInput.value);
+    else toast('Masukkan link YouTube untuk ' + (section === 'M' ? 'Mixer' : 'DECK ' + section));
+  });
+  if (urlInput) urlInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') loadBtn && loadBtn.click();
+  });
+  if (playBtn) playBtn.addEventListener('click', () => {
+    const p = ytState[section].player;
+    if (p && p.playVideo) p.playVideo();
+  });
+  if (pauseBtn) pauseBtn.addEventListener('click', () => {
+    const p = ytState[section].player;
+    if (p && p.pauseVideo) p.pauseVideo();
+  });
+  if (stopBtn) stopBtn.addEventListener('click', () => {
+    const p = ytState[section].player;
+    if (p && p.stopVideo) p.stopVideo();
+  });
+  if (volSlider) volSlider.addEventListener('input', e => {
+    const v = parseInt(e.target.value);
+    if (volDisplay) volDisplay.textContent = v + '%';
+    const p = ytState[section].player;
+    if (p && p.setVolume) p.setVolume(v);
+  });
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    const st = ytState[section];
+    if (st.player && st.player.destroy) {
+      try { st.player.destroy(); } catch(e) {}
+      st.player = null;
+    }
+    if (urlInput) urlInput.value = '';
+    // Recreate container div if destroyed
+    const wrap = document.querySelector(section === 'A' ? '#vidAreaA' : section === 'B' ? '#vidAreaB' : '.yt-mixer-video-wrap');
+    if (wrap && !document.getElementById(st.containerId)) {
+      const div = document.createElement('div');
+      div.id = st.containerId;
+      div.className = 'yt-container';
+      wrap.appendChild(div);
+    }
+    if (section === 'A' || section === 'B') {
+      const d = Decks[section];
+      d.videoArea.classList.remove('yt-mode');
+      if (!d.audio.src) d.videoArea.classList.remove('active');
+      d.name.textContent = '— Belum ada lagu —';
+      d.labelText.textContent = 'NO TRACK';
+    } else if (section === 'M') {
+      const ph = $('ytPlaceholderM');
+      if (ph) ph.style.display = 'flex';
+    }
+    toast('YouTube ' + (section === 'M' ? 'Mixer' : 'DECK ' + section) + ' cleared');
+  });
+});
+
+/* ---------- AUTO-FIT DISABLED — layout is now responsive, no zoom-down ---------- */
+function fitToScreen() {
+  // No-op: layout uses width:100% + min-width + horizontal scroll instead of zoom.
+  // Kept for backward compat with existing event listeners.
+  const wrap = document.getElementById('app-wrap');
+  if (wrap) { wrap.style.zoom = '1'; wrap.style.transform = ''; }
+  document.body.style.minHeight = '';
 }
 
 /* ---------- INIT ---------- */
@@ -2817,7 +3286,7 @@ startBeat();
 window.addEventListener('resize', fitToScreen);
 window.addEventListener('load', () => setTimeout(fitToScreen, 80));
 setTimeout(fitToScreen, 80);
-toast('Selamat datang! Upload lagu ke DECK A/B (volume default sudah 0dB/80%). Tombol REC di header untuk rekam mix. MIC di mixer untuk siaran langsung.');
+toast('Selamat datang! Upload lagu ke DECK A/B (volume 200%), MIC di mixer, REC untuk rekam, atau paste link YouTube di panel YOUTUBE PLAYER.');
 
 </script>
 </body>
